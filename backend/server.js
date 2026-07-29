@@ -38,5 +38,7 @@ app.get("/test-db", async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`AgriVet Connect API running on http://localhost:${PORT}`);
+    console.log(
+        `AgriVet Connect API running on http://localhost:${PORT}`
+    );
 });
