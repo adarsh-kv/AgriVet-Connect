@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const db = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const authenticateToken = require("./middleware/authMiddleware");
 
 const app = express();
 
@@ -13,6 +14,13 @@ app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
     res.json({
         message: "AgriVet Connect API is running"
+    });
+});
+
+app.get("/api/protected", authenticateToken, (req, res) => {
+    res.json({
+        message: "You accessed a protected route",
+        user: req.user
     });
 });
 
