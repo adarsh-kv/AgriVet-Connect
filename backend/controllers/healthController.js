@@ -5,7 +5,6 @@ const addHealthRecord = async (req, res) => {
     try {
         const {
             livestock_id,
-            veterinarian_id,
             visit_date,
             diagnosis,
             treatment,
@@ -13,9 +12,12 @@ const addHealthRecord = async (req, res) => {
             remarks
         } = req.body;
 
-        if (!livestock_id || !veterinarian_id || !visit_date) {
+        // Get veterinarian ID from JWT
+        const veterinarian_id = req.user.user_id;
+
+        if (!livestock_id || !visit_date) {
             return res.status(400).json({
-                message: "Livestock, Veterinarian and Visit Date are required"
+                message: "Livestock and Visit Date are required"
             });
         }
 
@@ -48,15 +50,45 @@ const addHealthRecord = async (req, res) => {
     }
 };
 
-// View All Health Records
+// View Health Records
 const getHealthRecords = async (req, res) => {
     try {
 
-        const [rows] = await db.query(
-            `SELECT * FROM health_records`
-        );
+        let rows;
 
-        res.json(rows);
+        if (req.user.role === "ADMIN") {
+
+            [rows] = await db.query(`
+                SELECT hr.*, l.animal_name, l.tag_number
+                FROM health_records hr
+                JOIN livestock l
+                ON hr.livestock_id = l.livestock_id
+            `);
+
+        } else if (req.user.role === "VETERINARIAN") {
+
+            [rows] = await db.query(`
+                SELECT hr.*, l.animal_name, l.tag_number
+                FROM health_records hr
+                JOIN livestock l
+                ON hr.livestock_id = l.livestock_id
+                WHERE hr.veterinarian_id = ?
+            `, [req.user.user_id]);
+
+        } else {
+
+            // Farmer
+            [rows] = await db.query(`
+                SELECT hr.*, l.animal_name, l.tag_number
+                FROM health_records hr
+                JOIN livestock l
+                ON hr.livestock_id = l.livestock_id
+                WHERE l.owner_id = ?
+            `, [req.user.user_id]);
+
+        }
+
+        res.status(200).json(rows);
 
     } catch (error) {
 
@@ -74,14 +106,40 @@ const getHealthRecordById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const [rows] = await db.query(
-            "SELECT * FROM health_records WHERE record_id = ?",
-            [id]
-        );
+        let rows;
+
+        if (req.user.role === "ADMIN") {
+
+            [rows] = await db.query(
+                "SELECT * FROM health_records WHERE record_id = ?",
+                [id]
+            );
+
+        } else if (req.user.role === "VETERINARIAN") {
+
+            [rows] = await db.query(
+                `SELECT * FROM health_records
+                 WHERE record_id = ? AND veterinarian_id = ?`,
+                [id, req.user.user_id]
+            );
+
+        } else {
+
+            [rows] = await db.query(
+                `SELECT hr.*
+                 FROM health_records hr
+                 JOIN livestock l
+                 ON hr.livestock_id = l.livestock_id
+                 WHERE hr.record_id = ?
+                 AND l.owner_id = ?`,
+                [id, req.user.user_id]
+            );
+
+        }
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Health record not found"
+                message: "Health record not found or permission denied"
             });
         }
 
@@ -89,6 +147,7 @@ const getHealthRecordById = async (req, res) => {
 
     } catch (error) {
         console.error(error);
+
         res.status(500).json({
             message: "Server Error"
         });
@@ -98,6 +157,7 @@ const getHealthRecordById = async (req, res) => {
 // Update Health Record
 const updateHealthRecord = async (req, res) => {
     try {
+
         const { id } = req.params;
 
         const {
@@ -108,27 +168,54 @@ const updateHealthRecord = async (req, res) => {
             remarks
         } = req.body;
 
-        const [result] = await db.query(
-            `UPDATE health_records
-             SET visit_date=?,
-                 diagnosis=?,
-                 treatment=?,
-                 medicine=?,
-                 remarks=?
-             WHERE record_id=?`,
-            [
-                visit_date,
-                diagnosis,
-                treatment,
-                medicine,
-                remarks,
-                id
-            ]
-        );
+        let result;
+
+        if (req.user.role === "ADMIN") {
+
+            [result] = await db.query(
+                `UPDATE health_records
+                 SET visit_date=?,
+                     diagnosis=?,
+                     treatment=?,
+                     medicine=?,
+                     remarks=?
+                 WHERE record_id=?`,
+                [
+                    visit_date,
+                    diagnosis,
+                    treatment,
+                    medicine,
+                    remarks,
+                    id
+                ]
+            );
+
+        } else {
+
+            [result] = await db.query(
+                `UPDATE health_records
+                 SET visit_date=?,
+                     diagnosis=?,
+                     treatment=?,
+                     medicine=?,
+                     remarks=?
+                 WHERE record_id=? AND veterinarian_id=?`,
+                [
+                    visit_date,
+                    diagnosis,
+                    treatment,
+                    medicine,
+                    remarks,
+                    id,
+                    req.user.user_id
+                ]
+            );
+
+        }
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
-                message: "Health record not found"
+                message: "Health record not found or permission denied"
             });
         }
 
@@ -137,11 +224,13 @@ const updateHealthRecord = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error(error);
 
         res.status(500).json({
             message: "Server Error"
         });
+
     }
 };
 
@@ -151,18 +240,32 @@ const deleteHealthRecord = async (req, res) => {
 
         const { id } = req.params;
 
-        const [result] = await db.query(
-            "DELETE FROM health_records WHERE record_id=?",
-            [id]
-        );
+        let result;
+
+        if (req.user.role === "ADMIN") {
+
+            [result] = await db.query(
+                "DELETE FROM health_records WHERE record_id = ?",
+                [id]
+            );
+
+        } else {
+
+            [result] = await db.query(
+                `DELETE FROM health_records
+                 WHERE record_id = ? AND veterinarian_id = ?`,
+                [id, req.user.user_id]
+            );
+
+        }
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
-                message: "Health record not found"
+                message: "Health record not found or permission denied"
             });
         }
 
-        res.json({
+        res.status(200).json({
             message: "Health record deleted successfully"
         });
 
