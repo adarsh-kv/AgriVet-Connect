@@ -4,12 +4,14 @@ require("dotenv").config();
 const db = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
+const authorizeRoles = require("./middleware/roleMiddleware");
+const livestockRoutes = require("./routes/livestockRoutes");
 
 const app = express();
 
 app.use(express.json());
-
 app.use("/api/auth", authRoutes);
+app.use("/api/livestock", livestockRoutes);
 
 app.get("/", (req, res) => {
     res.json({
@@ -50,3 +52,42 @@ app.listen(PORT, () => {
         `AgriVet Connect API running on http://localhost:${PORT}`
     );
 });
+
+app.get(
+    "/api/admin",
+    authenticateToken,
+    authorizeRoles("ADMIN"),
+    (req, res) => {
+
+        res.json({
+            message: "Welcome Admin"
+        });
+
+    }
+);
+
+app.get(
+    "/api/farmer",
+    authenticateToken,
+    authorizeRoles("FARMER"),
+    (req, res) => {
+
+        res.json({
+            message: "Welcome Farmer"
+        });
+
+    }
+);
+
+app.get(
+    "/api/vet",
+    authenticateToken,
+    authorizeRoles("VETERINARIAN"),
+    (req, res) => {
+
+        res.json({
+            message: "Welcome Veterinarian"
+        });
+
+    }
+);
