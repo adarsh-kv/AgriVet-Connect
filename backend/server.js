@@ -7,6 +7,7 @@ const authenticateToken = require("./middleware/authMiddleware");
 const authorizeRoles = require("./middleware/roleMiddleware");
 const livestockRoutes = require("./routes/livestockRoutes");
 const healthRoutes = require("./routes/healthRoutes");
+const vaccinationRoutes = require("./routes/vaccinationRoutes");
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/livestock", livestockRoutes);
 app.use("/api/health", healthRoutes);
+app.use("/api/vaccinations", vaccinationRoutes);
 
 app.get("/", (req, res) => {
     res.json({
