@@ -63,6 +63,37 @@ const addLivestock = async (req, res) => {
     }
 };
 
+// Get All Livestock
+const getAllLivestock = async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            `SELECT
+                livestock_id,
+                owner_id,
+                tag_number,
+                animal_name,
+                species,
+                breed,
+                gender,
+                date_of_birth,
+                weight,
+                health_status,
+                created_at
+            FROM livestock`
+        );
+
+        res.status(200).json(rows);
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+    }
+};
+
 module.exports = {
-    addLivestock
+    addLivestock,
+    getAllLivestock
 };
