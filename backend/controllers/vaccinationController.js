@@ -4,6 +4,16 @@ const db = require("../config/db");
 const addVaccination = async (req, res) => {
     try {
 
+        // Only veterinarians and admins can add vaccination records
+        if (
+            req.user.role !== "VETERINARIAN" &&
+            req.user.role !== "ADMIN"
+        ) {
+            return res.status(403).json({
+                message: "Only veterinarians and admins can add vaccination records"
+            });
+        }
+
         const {
             livestock_id,
             vaccine_name,
@@ -12,12 +22,12 @@ const addVaccination = async (req, res) => {
             remarks
         } = req.body;
 
-        // Get veterinarian ID from JWT
         const veterinarian_id = req.user.user_id;
 
         if (!livestock_id || !vaccine_name || !vaccination_date) {
             return res.status(400).json({
-                message: "Livestock, Vaccine Name and Vaccination Date are required"
+                message:
+                    "Livestock, Vaccine Name and Vaccination Date are required"
             });
         }
 

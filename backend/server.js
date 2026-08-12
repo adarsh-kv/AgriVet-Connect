@@ -1,4 +1,6 @@
 const express = require("express");
+const cors = require("cors");
+const app = express();
 require("dotenv").config();
 
 const db = require("./config/db");
@@ -8,14 +10,15 @@ const authorizeRoles = require("./middleware/roleMiddleware");
 const livestockRoutes = require("./routes/livestockRoutes");
 const healthRoutes = require("./routes/healthRoutes");
 const vaccinationRoutes = require("./routes/vaccinationRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
-const app = express();
-
+app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/livestock", livestockRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/vaccinations", vaccinationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
     res.json({
