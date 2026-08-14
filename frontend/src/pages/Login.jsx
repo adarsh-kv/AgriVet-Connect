@@ -34,7 +34,15 @@ const Login = () => {
             localStorage.setItem("token", token);
             localStorage.setItem("user", JSON.stringify(user));
 
-            navigate("/dashboard");
+            if (user.role === "FARMER") {
+                navigate("/dashboard");
+            } else if (user.role === "VETERINARIAN") {
+                navigate("/veterinarian/requests");
+            } else if (user.role === "ADMIN") {
+                navigate("/admin");
+            } else {
+                navigate("/dashboard");
+            }
 
         } catch (error) {
             setError(

@@ -8,6 +8,7 @@ import Vaccinations from "./pages/Vaccinations";
 import Register from "./pages/Register";
 import Veterinarian from "./pages/Veterinarian";
 import VeterinarianRequests from "./pages/VeterinarianRequests";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
     return (
@@ -25,47 +26,69 @@ const App = () => {
                 <Route
                     path="/dashboard"
                     element={
-                        <Layout>
-                            <Dashboard />
-                        </Layout>
+                        <ProtectedRoute allowedRoles={["FARMER"]}>
+                            <Layout>
+                                <Dashboard />
+                            </Layout>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/livestock"
                     element={
-                        <Layout>
-                            <Livestock />
-                        </Layout>
+                        <ProtectedRoute
+                            allowedRoles={["FARMER", "VETERINARIAN", "ADMIN"]}
+                        >
+                            <Layout>
+                                <Livestock />
+                            </Layout>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/health-records"
                     element={
-                        <Layout>
-                            <HealthRecords />
-                        </Layout>
+                        <ProtectedRoute
+                            allowedRoles={["FARMER", "VETERINARIAN", "ADMIN"]}
+                        >
+                            <Layout>
+                                <HealthRecords />
+                            </Layout>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/vaccinations"
                     element={
-                        <Layout>
-                            <Vaccinations />
-                        </Layout>
+                        <ProtectedRoute
+                            allowedRoles={["FARMER", "VETERINARIAN", "ADMIN"]}
+                        >
+                            <Layout>
+                                <Vaccinations />
+                            </Layout>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/veterinarian"
-                    element={<Veterinarian />}
+                    element={
+                        <ProtectedRoute allowedRoles={["FARMER"]}>
+                            <Veterinarian />
+                        </ProtectedRoute>
+                    }
                 />
 
                 <Route
                     path="/veterinarian/requests"
-                    element={<VeterinarianRequests />}
+                    element={
+                        <ProtectedRoute allowedRoles={["VETERINARIAN"]}>
+                            <VeterinarianRequests />
+                        </ProtectedRoute>
+                    }
                 />
 
             </Routes>
