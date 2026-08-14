@@ -5,6 +5,7 @@ import Layout from "./components/Layout";
 import Livestock from "./pages/Livestock";
 import HealthRecords from "./pages/HealthRecords";
 import Vaccinations from "./pages/Vaccinations";
+import Register from "./pages/Register";
 
 const App = () => {
     return (
@@ -17,6 +18,7 @@ const App = () => {
                     path="/"
                     element={<Navigate to="/login" replace />}
                 />
+                <Route path="/register" element={<Register />} />
                 
                 <Route
                     path="/dashboard"

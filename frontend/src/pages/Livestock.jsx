@@ -16,6 +16,20 @@ const TagIcon = () => (
     />
 );
 
+const EditIcon = () => (
+    <path
+        d="M14.5 5.5l4 4L8 20H4v-4L14.5 5.5z M13 7l4 4"
+        stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"
+    />
+);
+
+const DeleteIcon = () => (
+    <path
+        d="M5 7h14M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0-.8 12.1a2 2 0 01-2 1.9H8.8a2 2 0 01-2-1.9L6 7h12z"
+        stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"
+    />
+);
+
 const sharedStyles = (
     <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -70,32 +84,32 @@ const Livestock = () => {
     };
 
     const handleEdit = (animal) => {
-    setEditingId(animal.livestock_id);
+        setEditingId(animal.livestock_id);
 
-    setFormData({
-        tag_number: animal.tag_number || "",
-        animal_name: animal.animal_name || "",
-        species: animal.species || "",
-        breed: animal.breed || "",
-        weight: animal.weight || ""
+        setFormData({
+            tag_number: animal.tag_number || "",
+            animal_name: animal.animal_name || "",
+            species: animal.species || "",
+            breed: animal.breed || "",
+            weight: animal.weight || ""
         });
 
         setShowForm(true);
     };
 
     const handleDelete = async (livestockId) => {
-    const confirmed = window.confirm(
-        "Are you sure you want to delete this animal?"
-    );
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this animal?"
+        );
 
-    if (!confirmed) return;
+        if (!confirmed) return;
 
-    try {
-        await API.delete(`/livestock/${livestockId}`);
+        try {
+            await API.delete(`/livestock/${livestockId}`);
 
-        // Refresh the list from backend
-        const updatedResponse = await API.get("/livestock");
-        setLivestock(updatedResponse.data);
+            // Refresh the list from backend
+            const updatedResponse = await API.get("/livestock");
+            setLivestock(updatedResponse.data);
 
         } catch (error) {
             setError(
@@ -106,41 +120,41 @@ const Livestock = () => {
     };
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    setSubmitting(true);
-    setFormError("");
+        setSubmitting(true);
+        setFormError("");
 
-    try {
-        if (editingId) {
-            await API.put(`/livestock/${editingId}`, {
-                ...formData,
-                weight: formData.weight
-                    ? Number(formData.weight)
-                    : null
-            });
-        } else {
-            await API.post("/livestock", {
-                ...formData,
-                weight: formData.weight
-                    ? Number(formData.weight)
-                    : null
-            });
-        }
+        try {
+            if (editingId) {
+                await API.put(`/livestock/${editingId}`, {
+                    ...formData,
+                    weight: formData.weight
+                        ? Number(formData.weight)
+                        : null
+                });
+            } else {
+                await API.post("/livestock", {
+                    ...formData,
+                    weight: formData.weight
+                        ? Number(formData.weight)
+                        : null
+                });
+            }
 
-        // Get latest data from backend
-        const updatedResponse = await API.get("/livestock");
-        setLivestock(updatedResponse.data);
+            // Get latest data from backend
+            const updatedResponse = await API.get("/livestock");
+            setLivestock(updatedResponse.data);
 
-        setFormData(EMPTY_FORM);
-        setEditingId(null);
-        setShowForm(false);
+            setFormData(EMPTY_FORM);
+            setEditingId(null);
+            setShowForm(false);
 
-    } catch (error) {
-        setFormError(
-            error.response?.data?.message ||
-            `Failed to ${editingId ? "update" : "add"} livestock`
-        );
+        } catch (error) {
+            setFormError(
+                error.response?.data?.message ||
+                `Failed to ${editingId ? "update" : "add"} livestock`
+            );
         } finally {
             setSubmitting(false);
         }
@@ -215,14 +229,18 @@ const Livestock = () => {
 
                     <button
                         type="button"
-                        onClick={() => setShowForm(true)}
+                        onClick={() => {
+                            setEditingId(null);
+                            setFormData(EMPTY_FORM);
+                            setShowForm(true);
+                        }}
                         className="av-mono text-[10px] tracking-[0.15em] uppercase bg-[#1F3B2C] text-[#F6F1E4] px-5 py-3 rounded-sm hover:bg-[#2C4A37] transition-colors"
                     >
                         + Add Livestock
                     </button>
                 </div>
 
-                {/* Add Livestock form */}
+                {/* Add / Edit Livestock form */}
                 {showForm && (
                     <div className="relative bg-white border border-[#DED7C9] rounded-sm p-7 mb-8 overflow-hidden">
                         <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#1F3B2C]" />
@@ -347,8 +365,8 @@ const Livestock = () => {
                                 >
                                     {submitting
                                         ? editingId
-                                            ? "Updating..."
-                                            : "Adding..."
+                                            ? "Updating…"
+                                            : "Adding…"
                                         : editingId
                                             ? "Update Animal"
                                             : "Add Animal"
@@ -402,7 +420,8 @@ const Livestock = () => {
                                         <th className="text-left px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
                                             Weight
                                         </th>
-                                        <th className="text-left px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
+
+                                        <th className="text-right px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
                                             Actions
                                         </th>
                                     </tr>
@@ -448,23 +467,29 @@ const Livestock = () => {
                                                     ? `${animal.weight} kg`
                                                     : "—"}
                                             </td>
-                                            
+
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center justify-end gap-4">
 
                                                     <button
                                                         type="button"
                                                         onClick={() => handleEdit(animal)}
-                                                        className="text-[#1F3B2C] av-mono text-[10px] uppercase tracking-wider hover:text-[#D9A441] transition-colors"
+                                                        className="inline-flex items-center gap-1.5 av-mono text-[10px] uppercase tracking-wider text-[#6B6255] hover:text-[#1F3B2C] transition-colors"
                                                     >
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
+                                                            <EditIcon />
+                                                        </svg>
                                                         Edit
                                                     </button>
 
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDelete(animal.livestock_id)}
-                                                        className="text-[#A8452F] av-mono text-[10px] uppercase tracking-wider hover:opacity-70 transition-opacity"
+                                                        className="inline-flex items-center gap-1.5 av-mono text-[10px] uppercase tracking-wider text-[#6B6255] hover:text-[#A8452F] transition-colors"
                                                     >
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
+                                                            <DeleteIcon />
+                                                        </svg>
                                                         Delete
                                                     </button>
 

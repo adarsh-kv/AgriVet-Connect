@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { Link } from "react-router-dom";
 
 const TRACK_NODES = [
     { id: "TAG-0231", label: "Vitals normal", top: "22%" },
@@ -232,6 +233,18 @@ const Login = () => {
                         >
                             {loading ? "Signing in…" : "Sign In"}
                         </button>
+
+                        <div className="mt-6 text-center">
+                            <p className="text-sm text-[#8A8072]">
+                                Don't have an account?{" "}
+                                <Link
+                                    to="/register"
+                                    className="text-[#1F3B2C] font-medium hover:text-[#D9A441]"
+                                >
+                                    Register
+                                </Link>
+                            </p>
+                        </div>
 
                     </form>
 
