@@ -6,6 +6,8 @@ import Livestock from "./pages/Livestock";
 import HealthRecords from "./pages/HealthRecords";
 import Vaccinations from "./pages/Vaccinations";
 import Register from "./pages/Register";
+import Veterinarian from "./pages/Veterinarian";
+import VeterinarianRequests from "./pages/VeterinarianRequests";
 
 const App = () => {
     return (
@@ -54,6 +56,16 @@ const App = () => {
                             <Vaccinations />
                         </Layout>
                     }
+                />
+
+                <Route
+                    path="/veterinarian"
+                    element={<Veterinarian />}
+                />
+
+                <Route
+                    path="/veterinarian/requests"
+                    element={<VeterinarianRequests />}
                 />
 
             </Routes>

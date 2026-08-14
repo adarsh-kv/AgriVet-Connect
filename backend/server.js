@@ -11,6 +11,7 @@ const livestockRoutes = require("./routes/livestockRoutes");
 const healthRoutes = require("./routes/healthRoutes");
 const vaccinationRoutes = require("./routes/vaccinationRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const veterinarianRoutes = require("./routes/veterinarianRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -19,6 +20,7 @@ app.use("/api/livestock", livestockRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/vaccinations", vaccinationRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/veterinarians", veterinarianRoutes);
 
 app.get("/", (req, res) => {
     res.json({
