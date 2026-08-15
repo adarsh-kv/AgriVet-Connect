@@ -9,6 +9,9 @@ import Register from "./pages/Register";
 import Veterinarian from "./pages/Veterinarian";
 import VeterinarianRequests from "./pages/VeterinarianRequests";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import VeterinarianDashboard from "./pages/VeterinarianDashboard";
 
 const App = () => {
     return (
@@ -86,7 +89,44 @@ const App = () => {
                     path="/veterinarian/requests"
                     element={
                         <ProtectedRoute allowedRoles={["VETERINARIAN"]}>
-                            <VeterinarianRequests />
+                            <Layout>
+                                <VeterinarianRequests />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["ADMIN"]}
+                        >
+                            <Layout>
+                                <AdminDashboard />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/users"
+                    element={
+                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                            <Layout>
+                                <AdminUsers />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/vet/dashboard"
+                    element={
+                        <ProtectedRoute allowedRoles={["VETERINARIAN"]}>
+                            <Layout>
+                                <VeterinarianDashboard />
+                            </Layout>
                         </ProtectedRoute>
                     }
                 />

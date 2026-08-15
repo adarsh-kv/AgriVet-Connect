@@ -146,6 +146,8 @@ const getVeterinarianRequests = async (req, res) => {
                     vr.*,
                     v.full_name AS veterinarian_name,
                     l.animal_name,
+                    l.species,
+                    l.breed,
                     l.tag_number
                  FROM veterinarian_requests vr
                  JOIN users v
@@ -164,6 +166,8 @@ const getVeterinarianRequests = async (req, res) => {
                     vr.*,
                     f.full_name AS farmer_name,
                     l.animal_name,
+                    l.species,
+                    l.breed,
                     l.tag_number
                  FROM veterinarian_requests vr
                  JOIN users f
@@ -183,6 +187,8 @@ const getVeterinarianRequests = async (req, res) => {
                     f.full_name AS farmer_name,
                     v.full_name AS veterinarian_name,
                     l.animal_name,
+                    l.species,
+                    l.breed,
                     l.tag_number
                  FROM veterinarian_requests vr
                  JOIN users f
