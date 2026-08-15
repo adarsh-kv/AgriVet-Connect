@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Layout from "./components/Layout";
@@ -12,20 +13,28 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import VeterinarianDashboard from "./pages/VeterinarianDashboard";
+import Landing from "./pages/Landing";
 
 const App = () => {
     return (
         <BrowserRouter>
             <Routes>
 
-                <Route path="/login" element={<Login />} />
-
                 <Route
                     path="/"
-                    element={<Navigate to="/login" replace />}
+                    element={<Landing />}
                 />
-                <Route path="/register" element={<Register />} />
-                
+
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
+
+                <Route
+                    path="/register"
+                    element={<Register />}
+                />
+
                 <Route
                     path="/dashboard"
                     element={
@@ -41,7 +50,11 @@ const App = () => {
                     path="/livestock"
                     element={
                         <ProtectedRoute
-                            allowedRoles={["FARMER", "VETERINARIAN", "ADMIN"]}
+                            allowedRoles={[
+                                "FARMER",
+                                "VETERINARIAN",
+                                "ADMIN"
+                            ]}
                         >
                             <Layout>
                                 <Livestock />
@@ -54,7 +67,11 @@ const App = () => {
                     path="/health-records"
                     element={
                         <ProtectedRoute
-                            allowedRoles={["FARMER", "VETERINARIAN", "ADMIN"]}
+                            allowedRoles={[
+                                "FARMER",
+                                "VETERINARIAN",
+                                "ADMIN"
+                            ]}
                         >
                             <Layout>
                                 <HealthRecords />
@@ -67,7 +84,11 @@ const App = () => {
                     path="/vaccinations"
                     element={
                         <ProtectedRoute
-                            allowedRoles={["FARMER", "VETERINARIAN", "ADMIN"]}
+                            allowedRoles={[
+                                "FARMER",
+                                "VETERINARIAN",
+                                "ADMIN"
+                            ]}
                         >
                             <Layout>
                                 <Vaccinations />
@@ -80,7 +101,9 @@ const App = () => {
                     path="/veterinarian"
                     element={
                         <ProtectedRoute allowedRoles={["FARMER"]}>
-                            <Veterinarian />
+                            <Layout>
+                                <Veterinarian />
+                            </Layout>
                         </ProtectedRoute>
                     }
                 />
@@ -88,9 +111,24 @@ const App = () => {
                 <Route
                     path="/veterinarian/requests"
                     element={
-                        <ProtectedRoute allowedRoles={["VETERINARIAN"]}>
+                        <ProtectedRoute
+                            allowedRoles={["VETERINARIAN"]}
+                        >
                             <Layout>
                                 <VeterinarianRequests />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/vet/dashboard"
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["VETERINARIAN"]}
+                        >
+                            <Layout>
+                                <VeterinarianDashboard />
                             </Layout>
                         </ProtectedRoute>
                     }
@@ -112,20 +150,11 @@ const App = () => {
                 <Route
                     path="/admin/users"
                     element={
-                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                        <ProtectedRoute
+                            allowedRoles={["ADMIN"]}
+                        >
                             <Layout>
                                 <AdminUsers />
-                            </Layout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/vet/dashboard"
-                    element={
-                        <ProtectedRoute allowedRoles={["VETERINARIAN"]}>
-                            <Layout>
-                                <VeterinarianDashboard />
                             </Layout>
                         </ProtectedRoute>
                     }
