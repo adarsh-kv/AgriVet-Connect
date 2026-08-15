@@ -63,6 +63,17 @@ const ContourTexture = () => (
 // ICONS
 // ==========================================
 
+const FarmIcon = () => (
+    <path
+        d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-5h6v5M8 10h.01M12 10h.01M16 10h.01"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+    />
+);
+
 const DashboardIcon = () => (
     <path
         d="M4 4h7v7H4V4zM13 4h7v7h-7V4zM4 13h7v7H4v-7zM13 13h7v7h-7v-7z"
@@ -179,6 +190,11 @@ const Sidebar = () => {
             name: "Dashboard",
             path: "/dashboard",
             icon: <DashboardIcon />
+        },
+        {
+            name: "Farm",
+            path: "/farm",
+            icon: <FarmIcon />
         },
         {
             name: "Livestock",

@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import VeterinarianDashboard from "./pages/VeterinarianDashboard";
 import Landing from "./pages/Landing";
+import Farms from "./pages/Farm";
 
 const App = () => {
     return (
@@ -155,6 +156,17 @@ const App = () => {
                         >
                             <Layout>
                                 <AdminUsers />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/farm"
+                    element={
+                        <ProtectedRoute allowedRoles={["FARMER"]}>
+                            <Layout>
+                                <Farms />
                             </Layout>
                         </ProtectedRoute>
                     }

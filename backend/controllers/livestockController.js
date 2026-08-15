@@ -4,6 +4,7 @@ const db = require("../config/db");
 const addLivestock = async (req, res) => {
     try {
         const {
+            farm_id,
             tag_number,
             animal_name,
             species,
@@ -16,6 +17,26 @@ const addLivestock = async (req, res) => {
 
         // Get owner ID from JWT
         const owner_id = req.user.user_id;
+
+        if (!farm_id) {
+            return res.status(400).json({
+                message: "Farm is required"
+            });
+        }
+
+        const [farms] = await db.query(
+            `SELECT farm_id
+            FROM farms
+            WHERE farm_id = ?
+            AND owner_id = ?`,
+            [farm_id, req.user.user_id]
+        );
+
+        if (farms.length === 0) {
+            return res.status(403).json({
+                message: "Invalid farm or permission denied"
+            });
+        }
 
         if (!tag_number || !species) {
             return res.status(400).json({
@@ -35,21 +56,33 @@ const addLivestock = async (req, res) => {
         }
 
         const [result] = await db.query(
-            `INSERT INTO livestock
-            (owner_id, tag_number, animal_name, species, breed, gender, date_of_birth, weight, health_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                owner_id,
-                tag_number,
-                animal_name,
-                species,
-                breed,
-                gender,
-                date_of_birth,
-                weight,
-                health_status
-            ]
-        );
+        `INSERT INTO livestock
+        (
+            owner_id,
+            farm_id,
+            tag_number,
+            animal_name,
+            species,
+            breed,
+            gender,
+            date_of_birth,
+            weight,
+            health_status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+            req.user.user_id,
+            farm_id,
+            tag_number,
+            animal_name,
+            species,
+            breed,
+            gender || null,
+            date_of_birth || null,
+            weight || null,
+            health_status || null
+        ]
+    );
 
         res.status(201).json({
             message: "Livestock added successfully",
