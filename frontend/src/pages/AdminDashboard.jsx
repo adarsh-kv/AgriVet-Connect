@@ -16,16 +16,9 @@ const AdminDashboard = () => {
 
         const loadDashboard = async () => {
             try {
-                const response = await API.get(
-                    "/dashboard/stats"
-                );
+                const response = await API.get("/dashboard/stats");
 
                 if (!cancelled) {
-                    console.log(
-                        "ADMIN DASHBOARD:",
-                        response.data
-                    );
-
                     setStats({
                         totalLivestock:
                             response.data.totalLivestock || 0,
@@ -40,29 +33,16 @@ const AdminDashboard = () => {
                     setError("");
                     setLoading(false);
                 }
-
             } catch (error) {
-
                 if (!cancelled) {
-
                     console.error(
                         "ADMIN DASHBOARD ERROR:",
                         error
                     );
 
-                    console.error(
-                        "STATUS:",
-                        error.response?.status
-                    );
-
-                    console.error(
-                        "DATA:",
-                        error.response?.data
-                    );
-
                     setError(
                         error.response?.data?.message ||
-                        "Failed to load dashboard"
+                            "Failed to load dashboard"
                     );
 
                     setLoading(false);
@@ -75,28 +55,17 @@ const AdminDashboard = () => {
         return () => {
             cancelled = true;
         };
-
     }, []);
-
-    // ==========================================
-    // LOADING
-    // ==========================================
 
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#F6F1E4]">
-
                 <p className="text-sm text-[#8A8072]">
                     Loading dashboard...
                 </p>
-
             </div>
         );
     }
-
-    // ==========================================
-    // DASHBOARD
-    // ==========================================
 
     return (
         <div className="min-h-screen bg-[#F6F1E4] px-6 py-12">
@@ -121,7 +90,6 @@ const AdminDashboard = () => {
 
                 </div>
 
-
                 {/* ERROR */}
 
                 {error && (
@@ -138,11 +106,9 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-
                 {/* STATISTICS */}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-
 
                     {/* LIVESTOCK */}
 
@@ -158,7 +124,6 @@ const AdminDashboard = () => {
 
                     </div>
 
-
                     {/* HEALTH RECORDS */}
 
                     <div className="bg-white border border-[#DED7C9] p-6 rounded-sm">
@@ -172,7 +137,6 @@ const AdminDashboard = () => {
                         </p>
 
                     </div>
-
 
                     {/* VACCINATIONS */}
 
@@ -190,7 +154,6 @@ const AdminDashboard = () => {
 
                 </div>
 
-
                 {/* ADMIN INFORMATION */}
 
                 <div className="mt-8 bg-white border border-[#DED7C9] rounded-sm p-6">
@@ -204,8 +167,8 @@ const AdminDashboard = () => {
                     </h2>
 
                     <p className="text-sm text-[#8A8072] mt-2">
-                        Manage users, livestock, health records,
-                        vaccinations and veterinarian activities.
+                        Use the administration menu to manage
+                        users, veterinarians and system activities.
                     </p>
 
                 </div>

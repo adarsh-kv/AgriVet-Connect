@@ -33,12 +33,20 @@ const sharedStyles = (
 const Register = () => {
     const navigate = useNavigate();
 
+    const [roleType, setRoleType] = useState("FARMER");
+
     const [formData, setFormData] = useState({
         full_name: "",
         email: "",
         phone: "",
         password: "",
         confirmPassword: ""
+    });
+
+    const [vetData, setVetData] = useState({
+        certificate_name: "",
+        certificate_number: "",
+        certificate_file: null
     });
 
     const [error, setError] = useState("");
@@ -50,6 +58,22 @@ const Register = () => {
             ...formData,
             [e.target.name]: e.target.value
         });
+    };
+
+    const handleVetChange = (e) => {
+        setVetData({
+            ...vetData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setVetData({
+                ...vetData,
+                certificate_file: e.target.files[0]
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -77,22 +101,67 @@ const Register = () => {
             return;
         }
 
+        if (roleType === "VETERINARIAN") {
+            if (!vetData.certificate_name) {
+                setError("Please provide your certificate name / qualification");
+                return;
+            }
+
+            if (!vetData.certificate_file) {
+                setError("Please upload your veterinary certificate file (.pdf, .jpg, .png)");
+                return;
+            }
+        }
+
         try {
             setLoading(true);
 
-            await API.post("/auth/register", {
-                full_name: formData.full_name,
-                email: formData.email,
-                phone: formData.phone,
-                password: formData.password,
-                role_id: 1
-            });
+            if (roleType === "FARMER") {
+                await API.post("/auth/register", {
+                    full_name: formData.full_name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    password: formData.password,
+                    role_id: 1
+                });
 
-            setSuccess("Registration successful. Redirecting to login...");
+                setSuccess("Registration successful. Redirecting to login...");
 
-            setTimeout(() => {
-                navigate("/login");
-            }, 1500);
+                setTimeout(() => {
+                    navigate("/login");
+                }, 1500);
+
+            } else {
+                const payload = new FormData();
+                payload.append("full_name", formData.full_name);
+                payload.append("email", formData.email);
+                payload.append("phone", formData.phone);
+                payload.append("password", formData.password);
+                payload.append("certificate_name", vetData.certificate_name);
+                if (vetData.certificate_number) {
+                    payload.append("certificate_number", vetData.certificate_number);
+                }
+                payload.append("certificate", vetData.certificate_file);
+
+                const response = await API.post(
+                    "/auth/register-veterinarian",
+                    payload,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data"
+                        }
+                    }
+                );
+
+                setSuccess(
+                    response.data.message ||
+                    "Veterinarian registration submitted. Awaiting administrator approval."
+                );
+
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2500);
+            }
 
         } catch (error) {
             setError(
@@ -113,7 +182,7 @@ const Register = () => {
                 <div className="relative bg-white border border-[#DED7C9] rounded-sm p-8 overflow-hidden">
                     <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#1F3B2C]" />
 
-                    <div className="mb-8">
+                    <div className="mb-6">
                         <div className="flex items-center gap-2.5 mb-4">
                             <BrandMark stroke="#1F3B2C" size={24} />
                             <p className="av-mono text-[10px] tracking-[0.2em] uppercase text-[#A8452F]">
@@ -126,8 +195,45 @@ const Register = () => {
                         </h1>
 
                         <p className="text-sm text-[#8A8072] mt-2">
-                            Register as a farmer to get started.
+                            {roleType === "FARMER"
+                                ? "Register as a farmer to get started."
+                                : "Register as a veterinarian to join our verified network."}
                         </p>
+                    </div>
+
+                    {/* ROLE SELECTOR */}
+                    <div className="grid grid-cols-2 gap-2 p-1 mb-6 bg-[#F6F1E4] border border-[#DED7C9] rounded-sm">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setRoleType("FARMER");
+                                setError("");
+                                setSuccess("");
+                            }}
+                            className={`py-2 text-[11px] av-mono uppercase tracking-[0.1em] transition-all rounded-xs ${
+                                roleType === "FARMER"
+                                    ? "bg-[#1F3B2C] text-[#F6F1E4] font-medium shadow-xs"
+                                    : "text-[#5F574D] hover:text-[#2B2620]"
+                            }`}
+                        >
+                            Farmer
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setRoleType("VETERINARIAN");
+                                setError("");
+                                setSuccess("");
+                            }}
+                            className={`py-2 text-[11px] av-mono uppercase tracking-[0.1em] transition-all rounded-xs ${
+                                roleType === "VETERINARIAN"
+                                    ? "bg-[#1F3B2C] text-[#F6F1E4] font-medium shadow-xs"
+                                    : "text-[#5F574D] hover:text-[#2B2620]"
+                            }`}
+                        >
+                            Veterinarian
+                        </button>
                     </div>
 
                     {error && (
@@ -196,6 +302,56 @@ const Register = () => {
                             />
                         </div>
 
+                        {roleType === "VETERINARIAN" && (
+                            <>
+                                <div>
+                                    <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-2">
+                                        Certificate Name / Qualification *
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="certificate_name"
+                                        value={vetData.certificate_name}
+                                        onChange={handleVetChange}
+                                        placeholder="e.g. BVSc & AH Degree, State Veterinary License"
+                                        className="av-input w-full text-sm text-[#2B2620] placeholder:text-[#B4AA9B]"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-2">
+                                        Certificate / Registration Number
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="certificate_number"
+                                        value={vetData.certificate_number}
+                                        onChange={handleVetChange}
+                                        placeholder="e.g. VCI-2024-8849 (Optional)"
+                                        className="av-input w-full text-sm text-[#2B2620] placeholder:text-[#B4AA9B]"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-2">
+                                        Veterinary Certificate File *
+                                    </label>
+
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={handleFileChange}
+                                        className="av-input w-full text-xs text-[#2B2620] file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:uppercase file:tracking-[0.1em] file:av-mono file:bg-[#1F3B2C] file:text-[#F6F1E4] file:rounded-xs hover:file:bg-[#2C4A37] file:cursor-pointer"
+                                    />
+                                    <p className="text-[10px] text-[#8A8072] mt-1.5">
+                                        Accepted formats: PDF, JPG, PNG (Max 5MB)
+                                    </p>
+                                </div>
+                            </>
+                        )}
+
                         <div>
                             <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-2">
                                 Password *
@@ -231,7 +387,9 @@ const Register = () => {
                             disabled={loading}
                             className="w-full bg-[#1F3B2C] text-[#F6F1E4] py-3.5 rounded-sm av-mono text-[10px] tracking-[0.15em] uppercase hover:bg-[#2C4A37] transition-colors disabled:opacity-60"
                         >
-                            {loading ? "Creating Account…" : "Create Account"}
+                            {loading
+                                ? (roleType === "FARMER" ? "Creating Account…" : "Submitting Application…")
+                                : (roleType === "FARMER" ? "Create Account" : "Submit Registration")}
                         </button>
 
                     </form>

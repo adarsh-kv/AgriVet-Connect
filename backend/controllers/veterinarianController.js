@@ -12,7 +12,11 @@ const getVeterinarians = async (req, res) => {
              FROM users u
              JOIN roles r
                 ON u.role_id = r.role_id
-             WHERE r.role_name = 'VETERINARIAN'`
+             JOIN veterinarian_verifications vv
+                ON u.user_id = vv.user_id
+             WHERE r.role_name = 'VETERINARIAN'
+               AND u.status = 'ACTIVE'
+               AND vv.verification_status = 'APPROVED'`
         );
 
         res.status(200).json(rows);
