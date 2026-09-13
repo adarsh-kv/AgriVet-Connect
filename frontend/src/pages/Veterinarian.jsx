@@ -235,6 +235,99 @@ const Veterinarian = () => {
                     </div>
                 )}
 
+                {/* AVAILABLE VETERINARIANS SECTION */}
+                <section className="mb-10">
+                    <div className="mb-5">
+                        <p className="text-[10px] tracking-[0.2em] uppercase text-[#A8452F] mb-1">
+                            Verified Professionals
+                        </p>
+                        <h2 className="text-2xl font-medium text-[#2B2620]">
+                            Available Veterinarians
+                        </h2>
+                        <p className="text-xs text-[#8A8072] mt-1">
+                            Choose a qualified veterinarian based on their specialization and your livestock&apos;s needs.
+                        </p>
+                    </div>
+
+                    {veterinarians.length === 0 ? (
+                        <div className="bg-white border border-[#DED7C9] rounded-sm p-7 text-center">
+                            <p className="text-sm text-[#8A8072]">
+                                No approved veterinarians are currently available. Please check back later.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {veterinarians.map((vet) => {
+                                const isSelected = Number(selectedVet) === Number(vet.user_id);
+                                const specText =
+                                    vet.specialization && vet.specialization.trim()
+                                        ? vet.specialization
+                                        : "Specialization not specified";
+
+                                return (
+                                    <div
+                                        key={vet.user_id}
+                                        className={`bg-white border rounded-sm p-6 flex flex-col justify-between transition-all ${
+                                            isSelected
+                                                ? "border-[#1F3B2C] ring-2 ring-[#1F3B2C]/20 shadow-md bg-[#1F3B2C]/[0.02]"
+                                                : "border-[#DED7C9] hover:border-[#8A8072]"
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-start justify-between gap-2 mb-3">
+                                                <h3 className="text-base font-semibold text-[#2B2620]">
+                                                    {vet.full_name}
+                                                </h3>
+                                                {isSelected && (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider bg-[#1F3B2C] text-[#F6F1E4] font-medium">
+                                                        Selected
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <p className="text-[10px] tracking-[0.12em] uppercase text-[#8A8072] mb-1">
+                                                    Specialization:
+                                                </p>
+                                                <p
+                                                    className={`text-sm font-medium ${
+                                                        vet.specialization && vet.specialization.trim()
+                                                            ? "text-[#1F3B2C]"
+                                                            : "text-[#8A8072] italic"
+                                                    }`}
+                                                >
+                                                    {specText}
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-1 text-xs text-[#5F574D] border-t border-[#EEE8DC] pt-3 mb-5">
+                                                <p>
+                                                    <span className="text-[#8A8072]">Email:</span> {vet.email}
+                                                </p>
+                                                <p>
+                                                    <span className="text-[#8A8072]">Phone:</span> {vet.phone || "Not provided"}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedVet(String(vet.user_id))}
+                                            className={`w-full py-2.5 px-4 text-[11px] tracking-[0.15em] uppercase font-medium rounded-xs transition-colors ${
+                                                isSelected
+                                                    ? "bg-[#1F3B2C] text-[#F6F1E4]"
+                                                    : "border border-[#1F3B2C] text-[#1F3B2C] hover:bg-[#1F3B2C] hover:text-[#F6F1E4]"
+                                            }`}
+                                        >
+                                            {isSelected ? "Selected" : "Select Veterinarian"}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
+
                 <section className="bg-white border border-[#DED7C9] rounded-sm p-7 mb-10">
 
                     <div className="mb-7">
@@ -280,7 +373,7 @@ const Veterinarian = () => {
                                         key={vet.user_id}
                                         value={vet.user_id}
                                     >
-                                        {vet.full_name}
+                                        {vet.full_name} — {vet.specialization && vet.specialization.trim() ? vet.specialization : "Specialization not specified"}
                                     </option>
                                 ))}
 

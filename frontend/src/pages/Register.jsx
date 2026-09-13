@@ -45,6 +45,7 @@ const Register = () => {
 
     const [vetData, setVetData] = useState({
         certificate_name: "",
+        specialization: "",
         certificate_number: "",
         certificate_file: null
     });
@@ -107,6 +108,11 @@ const Register = () => {
                 return;
             }
 
+            if (!vetData.specialization || !vetData.specialization.trim()) {
+                setError("Please provide your specialization / area of practice");
+                return;
+            }
+
             if (!vetData.certificate_file) {
                 setError("Please upload your veterinary certificate file (.pdf, .jpg, .png)");
                 return;
@@ -138,6 +144,7 @@ const Register = () => {
                 payload.append("phone", formData.phone);
                 payload.append("password", formData.password);
                 payload.append("certificate_name", vetData.certificate_name);
+                payload.append("specialization", vetData.specialization.trim());
                 if (vetData.certificate_number) {
                     payload.append("certificate_number", vetData.certificate_number);
                 }
@@ -315,6 +322,21 @@ const Register = () => {
                                         value={vetData.certificate_name}
                                         onChange={handleVetChange}
                                         placeholder="e.g. BVSc & AH Degree, State Veterinary License"
+                                        className="av-input w-full text-sm text-[#2B2620] placeholder:text-[#B4AA9B]"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-2">
+                                        Specialization / Area of Practice *
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="specialization"
+                                        value={vetData.specialization}
+                                        onChange={handleVetChange}
+                                        placeholder="e.g. Large Animal / Cattle, Poultry, Small Animal"
                                         className="av-input w-full text-sm text-[#2B2620] placeholder:text-[#B4AA9B]"
                                     />
                                 </div>

@@ -690,6 +690,11 @@ const AdminUsers = () => {
                                                         <p className="text-sm font-medium text-[#2B2620]">
                                                             {v.certificate_name}
                                                         </p>
+                                                        {v.specialization && (
+                                                            <p className="text-xs text-[#1F3B2C] mt-0.5 font-medium">
+                                                                Spec: {v.specialization}
+                                                            </p>
+                                                        )}
                                                         {v.certificate_number && (
                                                             <p className="text-[11px] text-[#8A8072] mt-0.5">
                                                                 Reg: {v.certificate_number}
