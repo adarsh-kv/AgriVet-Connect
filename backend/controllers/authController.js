@@ -197,13 +197,14 @@ const registerVeterinarian = async (req, res) => {
             password,
             phone,
             certificate_name,
+            specialization,
             certificate_number
         } = req.body || {};
 
         // Check required fields
-        if (!full_name || !email || !password || !certificate_name) {
+        if (!full_name || !email || !password || !certificate_name || !specialization) {
             return res.status(400).json({
-                message: "Full name, email, password, and certificate name are required"
+                message: "Full name, email, password, certificate name, and specialization are required"
             });
         }
 
@@ -247,11 +248,12 @@ const registerVeterinarian = async (req, res) => {
         // Create veterinarian_verifications record with PENDING status
         await db.query(
             `INSERT INTO veterinarian_verifications
-            (user_id, certificate_name, certificate_number, certificate_file, verification_status)
-            VALUES (?, ?, ?, ?, 'PENDING')`,
+            (user_id, certificate_name, specialization, certificate_number, certificate_file, verification_status)
+            VALUES (?, ?, ?, ?, ?, 'PENDING')`,
             [
                 userId,
                 certificate_name,
+                specialization.trim(),
                 certificate_number || null,
                 certificateFilePath
             ]

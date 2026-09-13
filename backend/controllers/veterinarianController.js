@@ -8,7 +8,8 @@ const getVeterinarians = async (req, res) => {
                 u.user_id,
                 u.full_name,
                 u.email,
-                u.phone
+                u.phone,
+                vv.specialization
              FROM users u
              JOIN roles r
                 ON u.role_id = r.role_id
