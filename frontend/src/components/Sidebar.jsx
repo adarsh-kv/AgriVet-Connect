@@ -94,6 +94,17 @@ const LivestockIcon = () => (
     />
 );
 
+const FeedIcon = () => (
+    <path
+        d="M12 22V2M12 2C8 6 6 10 6 14c0 3.3 2.7 6 6 6s6-2.7 6-6c0-4-2-8-6-12zM8 9c2-1 4-1 4-1s0 2-1 4M16 9c-2-1-4-1-4-1s0 2 1 4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+    />
+);
+
 const HealthIcon = () => (
     <path
         d="M12 4v16M4 12h16"
@@ -200,6 +211,11 @@ const Sidebar = () => {
             name: "Livestock",
             path: "/livestock",
             icon: <LivestockIcon />
+        },
+        {
+            name: "Feed Management",
+            path: "/feed",
+            icon: <FeedIcon />
         },
         {
             name: "Health Records",

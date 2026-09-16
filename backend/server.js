@@ -15,6 +15,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const veterinarianRoutes = require("./routes/veterinarianRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const farmRoutes = require("./routes/farmRoutes");
+const feedRoutes = require("./routes/feedRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +28,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/veterinarians", veterinarianRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/farms", farmRoutes);
+app.use("/api/feed", feedRoutes);
 
 app.get("/", (req, res) => {
     res.json({

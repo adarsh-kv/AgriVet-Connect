@@ -15,6 +15,7 @@ import AdminUsers from "./pages/AdminUsers";
 import VeterinarianDashboard from "./pages/VeterinarianDashboard";
 import Landing from "./pages/Landing";
 import Farms from "./pages/Farm";
+import Feed from "./pages/Feed";
 
 const App = () => {
     return (
@@ -167,6 +168,17 @@ const App = () => {
                         <ProtectedRoute allowedRoles={["FARMER"]}>
                             <Layout>
                                 <Farms />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/feed"
+                    element={
+                        <ProtectedRoute allowedRoles={["FARMER"]}>
+                            <Layout>
+                                <Feed />
                             </Layout>
                         </ProtectedRoute>
                     }
