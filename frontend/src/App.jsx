@@ -16,6 +16,8 @@ import VeterinarianDashboard from "./pages/VeterinarianDashboard";
 import Landing from "./pages/Landing";
 import Farms from "./pages/Farm";
 import Feed from "./pages/Feed";
+import Schemes from "./pages/Schemes";
+import AdminSchemes from "./pages/AdminSchemes";
 
 const App = () => {
     return (
@@ -179,6 +181,28 @@ const App = () => {
                         <ProtectedRoute allowedRoles={["FARMER"]}>
                             <Layout>
                                 <Feed />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/schemes"
+                    element={
+                        <ProtectedRoute allowedRoles={["FARMER"]}>
+                            <Layout>
+                                <Schemes />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/schemes"
+                    element={
+                        <ProtectedRoute allowedRoles={["ADMIN"]}>
+                            <Layout>
+                                <AdminSchemes />
                             </Layout>
                         </ProtectedRoute>
                     }

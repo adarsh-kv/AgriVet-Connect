@@ -105,6 +105,17 @@ const FeedIcon = () => (
     />
 );
 
+const SchemeIcon = () => (
+    <path
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+    />
+);
+
 const HealthIcon = () => (
     <path
         d="M12 4v16M4 12h16"
@@ -231,6 +242,11 @@ const Sidebar = () => {
             name: "Veterinarian",
             path: "/veterinarian",
             icon: <VeterinarianIcon />
+        },
+        {
+            name: "Schemes & Subsidies",
+            path: "/schemes",
+            icon: <SchemeIcon />
         }
     ];
 
@@ -277,6 +293,11 @@ const Sidebar = () => {
             name: "User Management",
             path: "/admin/users",
             icon: <UsersIcon />
+        },
+        {
+            name: "Schemes Management",
+            path: "/admin/schemes",
+            icon: <SchemeIcon />
         }
     ];
 
