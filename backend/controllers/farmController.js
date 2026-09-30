@@ -222,6 +222,21 @@ const deleteFarm = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // Verify that the farm exists and belongs to the authenticated user
+        const [farm] = await db.query(
+            `SELECT farm_id
+             FROM farms
+             WHERE farm_id = ?
+             AND owner_id = ?`,
+            [id, req.user.user_id]
+        );
+
+        if (farm.length === 0) {
+            return res.status(404).json({
+                message: "Farm not found or permission denied"
+            });
+        }
+
         // Check whether livestock is still assigned
         const [livestock] = await db.query(
             `SELECT livestock_id

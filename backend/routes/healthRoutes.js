@@ -9,10 +9,16 @@ const {
 } = require("../controllers/healthController");
 
 const authenticateToken = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
-router.post("/", authenticateToken, addHealthRecord);
+router.post(
+    "/",
+    authenticateToken,
+    authorizeRoles("VETERINARIAN", "ADMIN"),
+    addHealthRecord
+);
 
 router.get("/", authenticateToken, getHealthRecords);
 
@@ -22,4 +28,4 @@ router.put("/:id", authenticateToken, updateHealthRecord);
 
 router.delete("/:id", authenticateToken, deleteHealthRecord);
 
-module.exports = router;
+module.exports = router;
