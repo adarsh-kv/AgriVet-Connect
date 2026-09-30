@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { notifyUser } = require("../utils/notificationHelper");
 
 // Get all veterinarians
 const getVeterinarians = async (req, res) => {
@@ -123,6 +124,27 @@ const createVeterinarianRequest = async (req, res) => {
                 reason || null
             ]
         );
+
+        // Fetch farmer name and animal details for notification
+        const [details] = await db.query(
+            `SELECT u.full_name AS farmer_name, l.animal_name, l.tag_number
+             FROM users u, livestock l
+             WHERE u.user_id = ? AND l.livestock_id = ?`,
+            [req.user.user_id, livestock_id]
+        );
+        const farmerName = details.length > 0 ? details[0].farmer_name : "A farmer";
+        const animalLabel = details.length > 0
+            ? (details[0].animal_name ? `${details[0].animal_name} (${details[0].tag_number})` : details[0].tag_number)
+            : "animal";
+
+        await notifyUser({
+            user_id: veterinarian_id,
+            title: "New Consultation Request",
+            message: `${farmerName} requested a consultation for ${animalLabel}.${reason ? ` Reason: ${reason}` : ""}`,
+            notification_type: "VET_REQUEST",
+            related_id: result.insertId,
+            related_type: "VETERINARIAN_REQUEST"
+        });
 
         res.status(201).json({
             message: "Veterinarian request sent successfully",
@@ -258,6 +280,31 @@ const updateVeterinarianRequest = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 message: "Request not found or already processed"
+            });
+        }
+
+        // Fetch request and animal details to notify the farmer
+        const [reqDetails] = await db.query(
+            `SELECT vr.farmer_id, l.animal_name, l.tag_number, v.full_name AS vet_name
+             FROM veterinarian_requests vr
+             JOIN livestock l ON vr.livestock_id = l.livestock_id
+             JOIN users v ON vr.veterinarian_id = v.user_id
+             WHERE vr.request_id = ?`,
+            [id]
+        );
+
+        if (reqDetails.length > 0) {
+            const animalLabel = reqDetails[0].animal_name
+                ? `${reqDetails[0].animal_name} (${reqDetails[0].tag_number})`
+                : reqDetails[0].tag_number;
+
+            await notifyUser({
+                user_id: reqDetails[0].farmer_id,
+                title: `Consultation Request ${status === "ACCEPTED" ? "Accepted" : "Declined"}`,
+                message: `Dr. ${reqDetails[0].vet_name || "Veterinarian"} has ${status === "ACCEPTED" ? "accepted" : "declined"} your consultation request for ${animalLabel}.`,
+                notification_type: "VET_REQUEST_STATUS",
+                related_id: id,
+                related_type: "VETERINARIAN_REQUEST"
             });
         }
 

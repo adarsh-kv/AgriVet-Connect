@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { notifyAdmins, notifyUser } = require("../utils/notificationHelper");
 
 // Apply for Livestock Insurance (FARMER only)
 const applyInsurance = async (req, res) => {
@@ -101,6 +102,22 @@ const applyInsurance = async (req, res) => {
                 identification_mark ? String(identification_mark).trim() : null
             ]
         );
+
+        // Fetch farmer name for notification
+        const [farmerUser] = await db.query(
+            "SELECT full_name FROM users WHERE user_id = ?",
+            [farmer_id]
+        );
+        const farmerName = farmerUser.length > 0 ? farmerUser[0].full_name : "A farmer";
+
+        // Notify active Admins
+        await notifyAdmins({
+            title: "New Insurance Application",
+            message: `${farmerName} submitted an application for "${String(policy_name).trim()}" with ${String(insurance_provider).trim()}.`,
+            notification_type: "INSURANCE_APPLICATION",
+            related_id: result.insertId,
+            related_type: "INSURANCE_POLICY"
+        });
 
         res.status(201).json({
             message: "Insurance application submitted successfully",
@@ -312,6 +329,19 @@ const updatePolicyStatus = async (req, res) => {
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Insurance policy not found" });
+        }
+
+        // Notify applicant farmer
+        if (existing[0].farmer_id) {
+            const isApproved = status === "ACTIVE";
+            await notifyUser({
+                user_id: existing[0].farmer_id,
+                title: `Insurance Policy ${isApproved ? "Approved & Activated" : status === "REJECTED" ? "Rejected" : "Updated"}`,
+                message: `Your insurance application for "${existing[0].policy_name}" has been ${status.toLowerCase()}.${isApproved ? ` Policy Number: ${assignedPolicyNumber}.` : ""}${admin_remarks ? ` Remarks: ${admin_remarks}` : ""}`,
+                notification_type: "INSURANCE_STATUS",
+                related_id: id,
+                related_type: "INSURANCE_POLICY"
+            });
         }
 
         res.status(200).json({

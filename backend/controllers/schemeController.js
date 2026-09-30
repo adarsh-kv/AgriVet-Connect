@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { notifyAdmins, notifyUser } = require("../utils/notificationHelper");
 
 // Get All Schemes
 // Admins see all schemes; Farmers see only ACTIVE schemes
@@ -247,7 +248,7 @@ const applyForScheme = async (req, res) => {
 
         // Verify scheme exists and is ACTIVE
         const [schemes] = await db.query(
-            "SELECT scheme_id, status FROM schemes WHERE scheme_id = ?",
+            "SELECT scheme_id, scheme_name, scheme_code, status FROM schemes WHERE scheme_id = ?",
             [id]
         );
 
@@ -295,6 +296,22 @@ const applyForScheme = async (req, res) => {
                 applicant_notes ? String(applicant_notes).trim() : null
             ]
         );
+
+        // Fetch applicant farmer name for notification
+        const [farmerUser] = await db.query(
+            "SELECT full_name FROM users WHERE user_id = ?",
+            [farmer_id]
+        );
+        const farmerName = farmerUser.length > 0 ? farmerUser[0].full_name : "A farmer";
+
+        // Notify active Admins
+        await notifyAdmins({
+            title: "New Scheme Application",
+            message: `${farmerName} submitted an application for "${schemes[0].scheme_name}" (${schemes[0].scheme_code}).`,
+            notification_type: "SCHEME_APPLICATION",
+            related_id: result.insertId,
+            related_type: "SCHEME_APPLICATION"
+        });
 
         res.status(201).json({
             message: "Scheme application submitted successfully",
@@ -411,6 +428,26 @@ const updateApplicationStatus = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 message: "Application not found"
+            });
+        }
+
+        // Notify applicant farmer
+        const [appDetails] = await db.query(
+            `SELECT sa.farmer_id, s.scheme_name
+             FROM scheme_applications sa
+             JOIN schemes s ON sa.scheme_id = s.scheme_id
+             WHERE sa.application_id = ?`,
+            [id]
+        );
+
+        if (appDetails.length > 0) {
+            await notifyUser({
+                user_id: appDetails[0].farmer_id,
+                title: `Scheme Application ${status === "APPROVED" ? "Approved" : "Rejected"}`,
+                message: `Your application for "${appDetails[0].scheme_name}" has been ${status.toLowerCase()}.${admin_remarks ? ` Remarks: ${admin_remarks}` : ""}`,
+                notification_type: "SCHEME_STATUS",
+                related_id: id,
+                related_type: "SCHEME_APPLICATION"
             });
         }
 

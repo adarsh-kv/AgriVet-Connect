@@ -18,6 +18,7 @@ const farmRoutes = require("./routes/farmRoutes");
 const feedRoutes = require("./routes/feedRoutes");
 const schemeRoutes = require("./routes/schemeRoutes");
 const insuranceRoutes = require("./routes/insuranceRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -33,6 +34,7 @@ app.use("/api/farms", farmRoutes);
 app.use("/api/feed", feedRoutes);
 app.use("/api/schemes", schemeRoutes);
 app.use("/api/insurance", insuranceRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
     res.json({
