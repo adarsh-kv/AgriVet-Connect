@@ -244,7 +244,7 @@ const Sidebar = () => {
             icon: <VeterinarianIcon />
         },
         {
-            name: "Schemes & Subsidies",
+            name: "Schemes & Insurance",
             path: "/schemes",
             icon: <SchemeIcon />
         }
@@ -295,7 +295,7 @@ const Sidebar = () => {
             icon: <UsersIcon />
         },
         {
-            name: "Schemes Management",
+            name: "Schemes & Insurance",
             path: "/admin/schemes",
             icon: <SchemeIcon />
         }

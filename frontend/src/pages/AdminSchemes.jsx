@@ -41,6 +41,71 @@ const sharedStyles = (
     `}</style>
 );
 
+const DocumentIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
+const ShieldIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+            d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
+const renderInsuranceBadge = (status) => {
+    switch (status) {
+        case "ACTIVE":
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-semibold bg-green-100 text-green-800 border border-green-300">
+                    Active
+                </span>
+            );
+        case "PENDING":
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                    Pending
+                </span>
+            );
+        case "REJECTED":
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-semibold bg-red-100 text-red-800 border border-red-300">
+                    Rejected
+                </span>
+            );
+        case "EXPIRED":
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-semibold bg-gray-100 text-gray-800 border border-gray-300">
+                    Expired
+                </span>
+            );
+        case "CLAIMED":
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-semibold bg-blue-100 text-blue-800 border border-blue-300">
+                    Claimed
+                </span>
+            );
+        default:
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-semibold bg-gray-100 text-gray-700">
+                    {status}
+                </span>
+            );
+    }
+};
+
 const EMPTY_SCHEME = {
     scheme_name: "",
     scheme_code: "",
@@ -64,11 +129,22 @@ const CATEGORIES = [
 ];
 
 const AdminSchemes = () => {
-    const [activeTab, setActiveTab] = useState("schemes"); // "schemes" | "applications"
+    // Top-Level Module Navigation: "schemes" | "insurance"
+    const [mainModule, setMainModule] = useState("schemes");
+
+    // Schemes Sub-tab: "schemes" | "applications"
+    const [schemeTab, setSchemeTab] = useState("schemes");
+
+    // Schemes Data States
     const [schemes, setSchemes] = useState([]);
     const [applications, setApplications] = useState([]);
 
+    // Insurance Data States
+    const [insurancePolicies, setInsurancePolicies] = useState([]);
+
+    // Loading & Alerts
     const [loading, setLoading] = useState(true);
+    const [insuranceLoading, setInsuranceLoading] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
 
@@ -79,26 +155,47 @@ const AdminSchemes = () => {
     const [savingScheme, setSavingScheme] = useState(false);
     const [formError, setFormError] = useState("");
 
-    // Review Application Modal State
+    // Review Scheme Application Modal State
     const [reviewModalApp, setReviewModalApp] = useState(null);
     const [reviewStatus, setReviewStatus] = useState("APPROVED");
     const [reviewRemarks, setReviewRemarks] = useState("");
     const [reviewing, setReviewing] = useState(false);
     const [reviewError, setReviewError] = useState("");
 
+    // Insurance Modals State
+    const [viewingInsurancePolicy, setViewingInsurancePolicy] = useState(null);
+    const [approveModalPolicy, setApproveModalPolicy] = useState(null);
+    const [rejectModalPolicy, setRejectModalPolicy] = useState(null);
+
+    // Insurance Approval Form
+    const [approvalPolicyNumber, setApprovalPolicyNumber] = useState("");
+    const [approvalStartDate, setApprovalStartDate] = useState("");
+    const [approvalEndDate, setApprovalEndDate] = useState("");
+    const [approvalRemarks, setApprovalRemarks] = useState("");
+    const [approving, setApproving] = useState(false);
+    const [approvalError, setApprovalError] = useState("");
+
+    // Insurance Rejection Form
+    const [rejectionRemarks, setRejectionRemarks] = useState("");
+    const [rejecting, setRejecting] = useState(false);
+    const [rejectionError, setRejectionError] = useState("");
+
+    // Fetch initial schemes data
     useEffect(() => {
         let isMounted = true;
 
         const fetchData = async () => {
             try {
-                const [schemesRes, appsRes] = await Promise.all([
+                const [schemesRes, appsRes, insuranceRes] = await Promise.all([
                     API.get("/schemes"),
-                    API.get("/schemes/applications")
+                    API.get("/schemes/applications"),
+                    API.get("/insurance")
                 ]);
 
                 if (isMounted) {
                     setSchemes(schemesRes.data);
                     setApplications(appsRes.data);
+                    setInsurancePolicies(insuranceRes.data);
                     setError("");
                 }
             } catch (err) {
@@ -120,16 +217,31 @@ const AdminSchemes = () => {
         };
     }, []);
 
-    // Open Add Scheme Modal
-    const handleOpenAddModal = () => {
+    // Fetch Insurance Policies
+    const fetchInsurancePolicies = async () => {
+        setInsuranceLoading(true);
+        try {
+            const res = await API.get("/insurance");
+            setInsurancePolicies(res.data);
+        } catch (err) {
+            console.error("ADMIN LOAD INSURANCE ERROR:", err);
+            setError(err.response?.data?.message || "Failed to load insurance policies");
+        } finally {
+            setInsuranceLoading(false);
+        }
+    };
+
+    // ========================================================
+    // SCHEME HANDLERS
+    // ========================================================
+    const handleOpenAddSchemeModal = () => {
         setEditingSchemeId(null);
         setSchemeForm(EMPTY_SCHEME);
         setFormError("");
         setShowSchemeModal(true);
     };
 
-    // Open Edit Scheme Modal
-    const handleOpenEditModal = (scheme) => {
+    const handleOpenEditSchemeModal = (scheme) => {
         setEditingSchemeId(scheme.scheme_id);
         setSchemeForm({
             scheme_name: scheme.scheme_name,
@@ -208,8 +320,7 @@ const AdminSchemes = () => {
         }
     };
 
-    // Toggle status (Activate / Close)
-    const handleToggleStatus = async (scheme) => {
+    const handleToggleSchemeStatus = async (scheme) => {
         const newStatus = scheme.status === "ACTIVE" ? "CLOSED" : "ACTIVE";
         try {
             await API.put(`/schemes/${scheme.scheme_id}`, {
@@ -229,7 +340,6 @@ const AdminSchemes = () => {
         }
     };
 
-    // Delete Scheme
     const handleDeleteScheme = async (schemeId, schemeName) => {
         const confirmed = window.confirm(
             `Are you sure you want to delete scheme "${schemeName}"? All associated farmer applications will also be deleted.`
@@ -251,21 +361,21 @@ const AdminSchemes = () => {
         }
     };
 
-    // Open Review Modal
-    const handleOpenReviewModal = (app) => {
+    // Scheme Application Review
+    const handleOpenReviewSchemeModal = (app) => {
         setReviewModalApp(app);
         setReviewStatus(app.status === "REJECTED" ? "REJECTED" : "APPROVED");
         setReviewRemarks(app.admin_remarks || "");
         setReviewError("");
     };
 
-    const handleCloseReviewModal = () => {
+    const handleCloseReviewSchemeModal = () => {
         setReviewModalApp(null);
         setReviewRemarks("");
         setReviewError("");
     };
 
-    const handleSaveReview = async (e) => {
+    const handleSaveSchemeReview = async (e) => {
         e.preventDefault();
         if (!reviewModalApp) return;
 
@@ -278,8 +388,10 @@ const AdminSchemes = () => {
                 admin_remarks: reviewRemarks.trim() || null
             });
 
-            setSuccessMessage(`Application for ${reviewModalApp.farmer_name} ${reviewStatus.toLowerCase()} successfully.`);
-            handleCloseReviewModal();
+            setSuccessMessage(
+                `Application for ${reviewModalApp.farmer_name} ${reviewStatus.toLowerCase()} successfully.`
+            );
+            handleCloseReviewSchemeModal();
 
             const updatedApps = await API.get("/schemes/applications");
             setApplications(updatedApps.data);
@@ -291,28 +403,165 @@ const AdminSchemes = () => {
         }
     };
 
+    // ========================================================
+    // INSURANCE HANDLERS
+    // ========================================================
+    const handleOpenApproveModal = (policy) => {
+        setApproveModalPolicy(policy);
+        // Pre-fill or generate suggested policy number
+        const defaultPolNum = policy.policy_number || `AGV-INS-${String(policy.policy_id).padStart(4, "0")}`;
+        setApprovalPolicyNumber(defaultPolNum);
+
+        // Pre-fill start date (requested start date or today)
+        const todayStr = new Date().toISOString().split("T")[0];
+        const sDate = policy.start_date ? String(policy.start_date).split("T")[0] : todayStr;
+        setApprovalStartDate(sDate);
+
+        // Pre-fill end date (requested end date or 1 year from start date)
+        if (policy.end_date) {
+            setApprovalEndDate(String(policy.end_date).split("T")[0]);
+        } else {
+            const nextYear = new Date();
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            setApprovalEndDate(nextYear.toISOString().split("T")[0]);
+        }
+
+        setApprovalRemarks(policy.admin_remarks || "");
+        setApprovalError("");
+    };
+
+    const handleCloseApproveModal = () => {
+        setApproveModalPolicy(null);
+        setApprovalPolicyNumber("");
+        setApprovalStartDate("");
+        setApprovalEndDate("");
+        setApprovalRemarks("");
+        setApprovalError("");
+    };
+
+    const handleConfirmApproval = async (e) => {
+        e.preventDefault();
+        if (!approveModalPolicy) return;
+
+        if (!approvalPolicyNumber.trim()) {
+            setApprovalError("Policy number is required for approval.");
+            return;
+        }
+
+        if (!approvalStartDate) {
+            setApprovalError("Policy start date is required.");
+            return;
+        }
+
+        if (!approvalEndDate) {
+            setApprovalError("Policy end date is required.");
+            return;
+        }
+
+        if (new Date(approvalEndDate) < new Date(approvalStartDate)) {
+            setApprovalError("End date cannot be earlier than start date.");
+            return;
+        }
+
+        setApproving(true);
+        setApprovalError("");
+
+        try {
+            await API.put(`/insurance/${approveModalPolicy.policy_id}/status`, {
+                status: "ACTIVE",
+                policy_number: approvalPolicyNumber.trim(),
+                start_date: approvalStartDate,
+                end_date: approvalEndDate,
+                admin_remarks: approvalRemarks.trim() || null
+            });
+
+            setSuccessMessage(
+                `Policy ${approvalPolicyNumber.trim()} approved and activated successfully.`
+            );
+            handleCloseApproveModal();
+            await fetchInsurancePolicies();
+        } catch (err) {
+            console.error("APPROVE INSURANCE ERROR:", err);
+            setApprovalError(err.response?.data?.message || "Failed to approve insurance policy.");
+        } finally {
+            setApproving(false);
+        }
+    };
+
+    const handleOpenRejectModal = (policy) => {
+        setRejectModalPolicy(policy);
+        setRejectionRemarks(policy.admin_remarks || "");
+        setRejectionError("");
+    };
+
+    const handleCloseRejectModal = () => {
+        setRejectModalPolicy(null);
+        setRejectionRemarks("");
+        setRejectionError("");
+    };
+
+    const handleConfirmRejection = async (e) => {
+        e.preventDefault();
+        if (!rejectModalPolicy) return;
+
+        setRejecting(true);
+        setRejectionError("");
+
+        try {
+            await API.put(`/insurance/${rejectModalPolicy.policy_id}/status`, {
+                status: "REJECTED",
+                admin_remarks: rejectionRemarks.trim() || null
+            });
+
+            setSuccessMessage(`Insurance application #${rejectModalPolicy.policy_id} rejected.`);
+            handleCloseRejectModal();
+            await fetchInsurancePolicies();
+        } catch (err) {
+            console.error("REJECT INSURANCE ERROR:", err);
+            setRejectionError(err.response?.data?.message || "Failed to reject insurance policy.");
+        } finally {
+            setRejecting(false);
+        }
+    };
+
+    const handleDeleteInsurancePolicy = async (policyId) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete insurance policy record #${policyId}? This action cannot be undone.`
+        );
+        if (!confirmed) return;
+
+        try {
+            await API.delete(`/insurance/${policyId}`);
+            setSuccessMessage(`Insurance policy #${policyId} deleted successfully.`);
+            await fetchInsurancePolicies();
+        } catch (err) {
+            console.error("DELETE INSURANCE ERROR:", err);
+            setError(err.response?.data?.message || "Failed to delete insurance policy.");
+        }
+    };
+
     return (
         <div className="p-8 max-w-7xl mx-auto">
             {sharedStyles}
 
             {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <p className="av-mono text-xs uppercase tracking-[0.2em] text-[#A8452F] mb-1">
                         Administration
                     </p>
                     <h1 className="av-serif text-3xl font-medium text-[#2B2620]">
-                        Government Schemes Management
+                        Schemes & Insurance Management
                     </h1>
                     <p className="text-sm text-[#8A8072] mt-1">
-                        Publish schemes, manage subsidy programs, and review farmer applications.
+                        Publish government schemes, review farmer subsidy applications, and manage livestock insurance policies.
                     </p>
                 </div>
 
-                {activeTab === "schemes" && (
+                {mainModule === "schemes" && schemeTab === "schemes" && (
                     <button
                         type="button"
-                        onClick={handleOpenAddModal}
+                        onClick={handleOpenAddSchemeModal}
                         className="px-5 py-2.5 bg-[#1F3B2C] text-[#F6F1E4] hover:bg-[#2C4A37] text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition"
                     >
                         + Add New Scheme
@@ -357,252 +606,473 @@ const AdminSchemes = () => {
                 </div>
             )}
 
-            {/* TABS */}
-            <div className="flex border-b border-[#DED7C9] mb-8">
+            {/* TOP-LEVEL UNIFIED MODULE NAVIGATION */}
+            <div className="flex border-b-2 border-[#DED7C9] mb-8 gap-8">
                 <button
                     type="button"
-                    onClick={() => setActiveTab("schemes")}
-                    className={`pb-3 px-4 text-xs uppercase tracking-[0.15em] font-medium transition border-b-2 ${
-                        activeTab === "schemes"
+                    onClick={() => {
+                        setMainModule("schemes");
+                        setError("");
+                    }}
+                    className={`pb-3 text-sm font-semibold tracking-wide transition flex items-center gap-2 border-b-2 -mb-[2px] ${
+                        mainModule === "schemes"
                             ? "border-[#1F3B2C] text-[#1F3B2C]"
                             : "border-transparent text-[#8A8072] hover:text-[#2B2620]"
                     }`}
                 >
-                    All Schemes ({schemes.length})
+                    <DocumentIcon />
+                    Government Schemes ({schemes.length})
                 </button>
                 <button
                     type="button"
-                    onClick={() => setActiveTab("applications")}
-                    className={`pb-3 px-4 text-xs uppercase tracking-[0.15em] font-medium transition border-b-2 ${
-                        activeTab === "applications"
+                    onClick={() => {
+                        setMainModule("insurance");
+                        setError("");
+                    }}
+                    className={`pb-3 text-sm font-semibold tracking-wide transition flex items-center gap-2 border-b-2 -mb-[2px] ${
+                        mainModule === "insurance"
                             ? "border-[#1F3B2C] text-[#1F3B2C]"
                             : "border-transparent text-[#8A8072] hover:text-[#2B2620]"
                     }`}
                 >
-                    Farmer Applications ({applications.length})
+                    <ShieldIcon />
+                    Livestock Insurance ({insurancePolicies.length})
                 </button>
             </div>
 
-            {loading ? (
-                <div className="p-16 text-center text-sm text-[#8A8072] flex items-center justify-center gap-3">
-                    <div className="w-5 h-5 border-2 border-[#1F3B2C] border-t-transparent rounded-full av-spin" />
-                    Loading administration data...
-                </div>
-            ) : activeTab === "schemes" ? (
-                /* SCHEMES TABLE */
-                <div className="bg-white border border-[#DED7C9] rounded-sm overflow-hidden shadow-xs">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-[#EEE8DC] bg-[#F6F1E4]/50">
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Code
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Scheme Name
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Category / Dept
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Deadline
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Status
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] text-right">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#EEE8DC]">
-                                {schemes.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" className="py-10 text-center text-sm text-[#8A8072]">
-                                            No schemes found. Click &quot;+ Add New Scheme&quot; to publish one.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    schemes.map((scheme) => (
-                                        <tr key={scheme.scheme_id} className="hover:bg-[#F6F1E4]/30 transition-colors">
-                                            <td className="py-4 px-5">
-                                                <span className="av-mono text-xs font-semibold px-2 py-0.5 bg-[#EEE8DC] text-[#2B2620] rounded-xs">
-                                                    {scheme.scheme_code}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-5">
-                                                <p className="text-sm font-medium text-[#2B2620]">
-                                                    {scheme.scheme_name}
-                                                </p>
-                                                <p className="text-xs text-[#8A8072] line-clamp-1">
-                                                    {scheme.benefits}
-                                                </p>
-                                            </td>
-                                            <td className="py-4 px-5 text-xs text-[#5F574D]">
-                                                <p className="font-medium text-[#1F3B2C]">{scheme.category}</p>
-                                                <p className="text-[#8A8072]">{scheme.department}</p>
-                                            </td>
-                                            <td className="py-4 px-5 text-xs text-[#5F574D]">
-                                                {scheme.application_deadline
-                                                    ? new Date(scheme.application_deadline).toLocaleDateString("en-IN", {
-                                                          day: "2-digit",
-                                                          month: "short",
-                                                          year: "numeric"
-                                                      })
-                                                    : "Ongoing"}
-                                            </td>
-                                            <td className="py-4 px-5">
-                                                <span
-                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-medium ${
-                                                        scheme.status === "ACTIVE"
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-gray-200 text-gray-700"
-                                                    }`}
-                                                >
-                                                    {scheme.status}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-5 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleToggleStatus(scheme)}
-                                                        className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] rounded-xs transition"
-                                                    >
-                                                        {scheme.status === "ACTIVE" ? "Close" : "Activate"}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleOpenEditModal(scheme)}
-                                                        className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-[#1F3B2C] text-[#1F3B2C] hover:bg-[#1F3B2C] hover:text-white rounded-xs transition"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteScheme(scheme.scheme_id, scheme.scheme_name)}
-                                                        className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-red-300 text-red-700 hover:bg-red-700 hover:text-white rounded-xs transition"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+            {/* ========================================================
+                ADMIN MODULE 1: GOVERNMENT SCHEMES
+            ======================================================== */}
+            {mainModule === "schemes" && (
+                <div>
+                    {/* SUB-TABS */}
+                    <div className="flex border-b border-[#EEE8DC] mb-6">
+                        <button
+                            type="button"
+                            onClick={() => setSchemeTab("schemes")}
+                            className={`pb-2.5 px-4 text-xs uppercase tracking-[0.15em] font-medium transition border-b-2 ${
+                                schemeTab === "schemes"
+                                    ? "border-[#1F3B2C] text-[#1F3B2C]"
+                                    : "border-transparent text-[#8A8072] hover:text-[#2B2620]"
+                            }`}
+                        >
+                            All Schemes ({schemes.length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setSchemeTab("applications")}
+                            className={`pb-2.5 px-4 text-xs uppercase tracking-[0.15em] font-medium transition border-b-2 ${
+                                schemeTab === "applications"
+                                    ? "border-[#1F3B2C] text-[#1F3B2C]"
+                                    : "border-transparent text-[#8A8072] hover:text-[#2B2620]"
+                            }`}
+                        >
+                            Farmer Applications ({applications.length})
+                        </button>
                     </div>
-                </div>
-            ) : (
-                /* APPLICATIONS TABLE */
-                <div className="bg-white border border-[#DED7C9] rounded-sm overflow-hidden shadow-xs">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-[#EEE8DC] bg-[#F6F1E4]/50">
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Applicant
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Scheme
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Animal
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Applied Date
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Status
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
-                                        Remarks
-                                    </th>
-                                    <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] text-right">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#EEE8DC]">
-                                {applications.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="7" className="py-10 text-center text-sm text-[#8A8072]">
-                                            No farmer applications submitted yet.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    applications.map((app) => (
-                                        <tr key={app.application_id} className="hover:bg-[#F6F1E4]/30 transition-colors">
-                                            <td className="py-4 px-5">
-                                                <p className="text-sm font-medium text-[#2B2620]">
-                                                    {app.farmer_name}
-                                                </p>
-                                                <p className="text-xs text-[#8A8072]">
-                                                    {app.farmer_phone || app.farmer_email}
-                                                </p>
-                                            </td>
-                                            <td className="py-4 px-5">
-                                                <p className="text-sm font-medium text-[#2B2620]">
-                                                    {app.scheme_name}
-                                                </p>
-                                                <span className="av-mono text-[10px] text-[#8A8072]">
-                                                    {app.scheme_code}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-5 text-xs text-[#5F574D]">
-                                                {app.tag_number ? (
-                                                    <span>
-                                                        {app.animal_name ? `${app.animal_name} (${app.tag_number})` : app.tag_number}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[#8A8072] italic">General</span>
-                                                )}
-                                            </td>
-                                            <td className="py-4 px-5 text-xs text-[#5F574D]">
-                                                {app.applied_at
-                                                    ? new Date(app.applied_at).toLocaleDateString("en-IN", {
-                                                          day: "2-digit",
-                                                          month: "short",
-                                                          year: "numeric"
-                                                      })
-                                                    : "—"}
-                                            </td>
-                                            <td className="py-4 px-5">
-                                                <span
-                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-medium ${
-                                                        app.status === "PENDING"
-                                                            ? "bg-amber-100 text-amber-800"
-                                                            : app.status === "APPROVED"
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-red-100 text-red-800"
-                                                    }`}
-                                                >
-                                                    {app.status}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-5 text-xs text-[#5F574D] max-w-xs truncate">
-                                                {app.admin_remarks || app.applicant_notes || "—"}
-                                            </td>
-                                            <td className="py-4 px-5 text-right">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleOpenReviewModal(app)}
-                                                    className="px-3 py-1.5 text-xs uppercase tracking-wider font-medium bg-[#1F3B2C] text-[#F6F1E4] hover:bg-[#2C4A37] rounded-xs transition"
-                                                >
-                                                    Review
-                                                </button>
-                                            </td>
+
+                    {loading ? (
+                        <div className="p-16 text-center text-sm text-[#8A8072] flex items-center justify-center gap-3">
+                            <div className="w-5 h-5 border-2 border-[#1F3B2C] border-t-transparent rounded-full av-spin" />
+                            Loading administration data...
+                        </div>
+                    ) : schemeTab === "schemes" ? (
+                        /* SCHEMES TABLE */
+                        <div className="bg-white border border-[#DED7C9] rounded-sm overflow-hidden shadow-xs">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-[#EEE8DC] bg-[#F6F1E4]/50">
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Code
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Scheme Name
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Category / Dept
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Deadline
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Status
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] text-right">
+                                                Actions
+                                            </th>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#EEE8DC]">
+                                        {schemes.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="6" className="py-10 text-center text-sm text-[#8A8072]">
+                                                    No schemes found. Click &quot;+ Add New Scheme&quot; to publish one.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            schemes.map((scheme) => (
+                                                <tr key={scheme.scheme_id} className="hover:bg-[#F6F1E4]/30 transition-colors">
+                                                    <td className="py-4 px-5">
+                                                        <span className="av-mono text-xs font-semibold px-2 py-0.5 bg-[#EEE8DC] text-[#2B2620] rounded-xs">
+                                                            {scheme.scheme_code}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-5">
+                                                        <p className="text-sm font-medium text-[#2B2620]">
+                                                            {scheme.scheme_name}
+                                                        </p>
+                                                        <p className="text-xs text-[#8A8072] line-clamp-1">
+                                                            {scheme.benefits}
+                                                        </p>
+                                                    </td>
+                                                    <td className="py-4 px-5 text-xs text-[#5F574D]">
+                                                        <p className="font-medium text-[#1F3B2C]">{scheme.category}</p>
+                                                        <p className="text-[#8A8072]">{scheme.department}</p>
+                                                    </td>
+                                                    <td className="py-4 px-5 text-xs text-[#5F574D]">
+                                                        {scheme.application_deadline
+                                                            ? new Date(scheme.application_deadline).toLocaleDateString("en-IN", {
+                                                                  day: "2-digit",
+                                                                  month: "short",
+                                                                  year: "numeric"
+                                                              })
+                                                            : "Ongoing"}
+                                                    </td>
+                                                    <td className="py-4 px-5">
+                                                        <span
+                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-medium ${
+                                                                scheme.status === "ACTIVE"
+                                                                    ? "bg-green-100 text-green-800"
+                                                                    : "bg-gray-200 text-gray-700"
+                                                            }`}
+                                                        >
+                                                            {scheme.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-5 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleToggleSchemeStatus(scheme)}
+                                                                className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] rounded-xs transition"
+                                                            >
+                                                                {scheme.status === "ACTIVE" ? "Close" : "Activate"}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleOpenEditSchemeModal(scheme)}
+                                                                className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-[#1F3B2C] text-[#1F3B2C] hover:bg-[#1F3B2C] hover:text-white rounded-xs transition"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteScheme(scheme.scheme_id, scheme.scheme_name)}
+                                                                className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-red-300 text-red-700 hover:bg-red-700 hover:text-white rounded-xs transition"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        /* SCHEME APPLICATIONS TABLE */
+                        <div className="bg-white border border-[#DED7C9] rounded-sm overflow-hidden shadow-xs">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-[#EEE8DC] bg-[#F6F1E4]/50">
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Applicant
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Scheme
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Animal
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Applied Date
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Status
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Remarks
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] text-right">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#EEE8DC]">
+                                        {applications.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="py-10 text-center text-sm text-[#8A8072]">
+                                                    No farmer applications submitted yet.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            applications.map((app) => (
+                                                <tr key={app.application_id} className="hover:bg-[#F6F1E4]/30 transition-colors">
+                                                    <td className="py-4 px-5">
+                                                        <p className="text-sm font-medium text-[#2B2620]">
+                                                            {app.farmer_name}
+                                                        </p>
+                                                        <p className="text-xs text-[#8A8072]">
+                                                            {app.farmer_phone || app.farmer_email}
+                                                        </p>
+                                                    </td>
+                                                    <td className="py-4 px-5">
+                                                        <p className="text-sm font-medium text-[#2B2620]">
+                                                            {app.scheme_name}
+                                                        </p>
+                                                        <span className="av-mono text-[10px] text-[#8A8072]">
+                                                            {app.scheme_code}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-5 text-xs text-[#5F574D]">
+                                                        {app.tag_number ? (
+                                                            <span>
+                                                                {app.animal_name ? `${app.animal_name} (${app.tag_number})` : app.tag_number}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[#8A8072] italic">General</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-4 px-5 text-xs text-[#5F574D]">
+                                                        {app.applied_at
+                                                            ? new Date(app.applied_at).toLocaleDateString("en-IN", {
+                                                                  day: "2-digit",
+                                                                  month: "short",
+                                                                  year: "numeric"
+                                                              })
+                                                            : "—"}
+                                                    </td>
+                                                    <td className="py-4 px-5">
+                                                        <span
+                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-medium ${
+                                                                app.status === "PENDING"
+                                                                    ? "bg-amber-100 text-amber-800"
+                                                                    : app.status === "APPROVED"
+                                                                    ? "bg-green-100 text-green-800"
+                                                                    : "bg-red-100 text-red-800"
+                                                            }`}
+                                                        >
+                                                            {app.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-5 text-xs text-[#5F574D] max-w-xs truncate">
+                                                        {app.admin_remarks || app.applicant_notes || "—"}
+                                                    </td>
+                                                    <td className="py-4 px-5 text-right">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleOpenReviewSchemeModal(app)}
+                                                            className="px-3 py-1.5 text-xs uppercase tracking-wider font-medium bg-[#1F3B2C] text-[#F6F1E4] hover:bg-[#2C4A37] rounded-xs transition"
+                                                        >
+                                                            Review
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
-            {/* SCHEME CREATE / EDIT MODAL */}
+            {/* ========================================================
+                ADMIN MODULE 2: LIVESTOCK INSURANCE
+            ======================================================== */}
+            {mainModule === "insurance" && (
+                <div>
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 className="av-serif text-xl font-medium text-[#2B2620]">
+                                Livestock Insurance Policies & Applications
+                            </h2>
+                            <p className="text-xs text-[#8A8072] mt-0.5">
+                                Review pending insurance applications, approve coverage with assigned policy numbers, or view complete policy records.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={fetchInsurancePolicies}
+                            className="px-4 py-2 border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition"
+                        >
+                            Refresh List
+                        </button>
+                    </div>
+
+                    {insuranceLoading ? (
+                        <div className="p-16 text-center text-sm text-[#8A8072] flex items-center justify-center gap-3">
+                            <div className="w-5 h-5 border-2 border-[#1F3B2C] border-t-transparent rounded-full av-spin" />
+                            Loading insurance policies...
+                        </div>
+                    ) : (
+                        <div className="bg-white border border-[#DED7C9] rounded-sm overflow-hidden shadow-xs">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-[#EEE8DC] bg-[#F6F1E4]/50">
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Policy / Provider
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Farmer / Applicant
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Livestock
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Coverage & Premium
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Status
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072]">
+                                                Applied Date
+                                            </th>
+                                            <th className="py-3 px-5 av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] text-right">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#EEE8DC]">
+                                        {insurancePolicies.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="py-10 text-center text-sm text-[#8A8072]">
+                                                    No insurance applications submitted by farmers yet.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            insurancePolicies.map((pol) => {
+                                                const isPending = pol.status === "PENDING";
+
+                                                return (
+                                                    <tr key={pol.policy_id} className="hover:bg-[#F6F1E4]/30 transition-colors">
+                                                        <td className="py-4 px-5">
+                                                            {pol.policy_number ? (
+                                                                <p className="av-mono text-xs font-semibold text-[#1F3B2C] bg-[#1F3B2C]/10 px-2 py-0.5 rounded-xs inline-block mb-1">
+                                                                    {pol.policy_number}
+                                                                </p>
+                                                            ) : (
+                                                                <span className="av-mono text-[10px] text-[#8A8072] bg-gray-100 px-2 py-0.5 rounded-xs inline-block mb-1">
+                                                                    Pending Number
+                                                                </span>
+                                                            )}
+                                                            <p className="text-sm font-medium text-[#2B2620]">
+                                                                {pol.policy_name}
+                                                            </p>
+                                                            <p className="text-xs text-[#8A8072]">
+                                                                {pol.insurance_provider}
+                                                            </p>
+                                                        </td>
+                                                        <td className="py-4 px-5 text-xs">
+                                                            <p className="font-semibold text-[#2B2620]">
+                                                                {pol.farmer_name}
+                                                            </p>
+                                                            <p className="text-[#8A8072]">
+                                                                {pol.farmer_phone || pol.farmer_email}
+                                                            </p>
+                                                        </td>
+                                                        <td className="py-4 px-5 text-xs text-[#5F574D]">
+                                                            <p className="font-semibold text-[#2B2620]">
+                                                                {pol.animal_name ? `${pol.animal_name} (${pol.tag_number})` : pol.tag_number}
+                                                            </p>
+                                                            <p className="text-[#8A8072]">
+                                                                {pol.species} • {pol.breed}
+                                                            </p>
+                                                        </td>
+                                                        <td className="py-4 px-5 text-xs text-[#5F574D]">
+                                                            <p className="font-semibold text-[#1F3B2C]">
+                                                                Cover: ₹{Number(pol.coverage_amount).toLocaleString("en-IN")}
+                                                            </p>
+                                                            <p className="text-[#8A8072]">
+                                                                Prem: ₹{Number(pol.premium_amount).toLocaleString("en-IN")}
+                                                                {Number(pol.subsidy_amount) > 0 && (
+                                                                    <span className="text-[#D9A441] ml-1">
+                                                                        (Sub: ₹{Number(pol.subsidy_amount).toLocaleString("en-IN")})
+                                                                    </span>
+                                                                )}
+                                                            </p>
+                                                        </td>
+                                                        <td className="py-4 px-5">
+                                                            {renderInsuranceBadge(pol.status)}
+                                                        </td>
+                                                        <td className="py-4 px-5 text-xs text-[#5F574D]">
+                                                            {pol.applied_at
+                                                                ? new Date(pol.applied_at).toLocaleDateString("en-IN", {
+                                                                      day: "2-digit",
+                                                                      month: "short",
+                                                                      year: "numeric"
+                                                                  })
+                                                                : "—"}
+                                                        </td>
+                                                        <td className="py-4 px-5 text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setViewingInsurancePolicy(pol)}
+                                                                    className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] rounded-xs transition"
+                                                                >
+                                                                    Details
+                                                                </button>
+
+                                                                {isPending && (
+                                                                    <>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleOpenApproveModal(pol)}
+                                                                            className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium bg-[#1F3B2C] text-[#F6F1E4] hover:bg-[#2C4A37] rounded-xs transition"
+                                                                        >
+                                                                            Approve
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleOpenRejectModal(pol)}
+                                                                            className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium bg-red-700 text-white hover:bg-red-800 rounded-xs transition"
+                                                                        >
+                                                                            Reject
+                                                                        </button>
+                                                                    </>
+                                                                )}
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDeleteInsurancePolicy(pol.policy_id)}
+                                                                    className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium border border-red-300 text-red-700 hover:bg-red-700 hover:text-white rounded-xs transition"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ========================================================
+                SCHEME CREATE / EDIT MODAL
+            ======================================================== */}
             {showSchemeModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
                     <div className="bg-white border border-[#DED7C9] rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto p-7 shadow-lg">
@@ -787,7 +1257,9 @@ const AdminSchemes = () => {
                 </div>
             )}
 
-            {/* REVIEW APPLICATION MODAL */}
+            {/* ========================================================
+                REVIEW SCHEME APPLICATION MODAL
+            ======================================================== */}
             {reviewModalApp && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
                     <div className="bg-white border border-[#DED7C9] rounded-sm max-w-lg w-full p-7 shadow-lg">
@@ -797,7 +1269,7 @@ const AdminSchemes = () => {
                             </h2>
                             <button
                                 type="button"
-                                onClick={handleCloseReviewModal}
+                                onClick={handleCloseReviewSchemeModal}
                                 className="text-[#8A8072] hover:text-[#2B2620] text-xl font-bold"
                             >
                                 ✕
@@ -833,7 +1305,7 @@ const AdminSchemes = () => {
                             )}
                         </div>
 
-                        <form onSubmit={handleSaveReview} className="space-y-4">
+                        <form onSubmit={handleSaveSchemeReview} className="space-y-4">
                             <div>
                                 <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-1">
                                     Review Decision *
@@ -872,7 +1344,7 @@ const AdminSchemes = () => {
                                     rows="3"
                                     value={reviewRemarks}
                                     onChange={(e) => setReviewRemarks(e.target.value)}
-                                    placeholder="Provide feedback or justification (e.g. Approved under category A, or Rejected due to incomplete land verification)..."
+                                    placeholder="Provide feedback or justification..."
                                     className="av-input w-full text-sm text-[#2B2620]"
                                 />
                             </div>
@@ -880,7 +1352,7 @@ const AdminSchemes = () => {
                             <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EEE8DC]">
                                 <button
                                     type="button"
-                                    onClick={handleCloseReviewModal}
+                                    onClick={handleCloseReviewSchemeModal}
                                     className="px-5 py-2 border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition"
                                 >
                                     Cancel
@@ -898,6 +1370,352 @@ const AdminSchemes = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================================
+                APPROVE INSURANCE MODAL (ACTIVE)
+            ======================================================== */}
+            {approveModalPolicy && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+                    <div className="bg-white border border-[#DED7C9] rounded-sm max-w-lg w-full p-7 shadow-lg">
+                        <div className="flex items-center justify-between mb-4 border-b border-[#EEE8DC] pb-3">
+                            <div>
+                                <h2 className="av-serif text-xl font-medium text-[#2B2620]">
+                                    Approve & Activate Policy
+                                </h2>
+                                <p className="text-xs text-[#8A8072] mt-0.5">
+                                    Policy #{approveModalPolicy.policy_id} — {approveModalPolicy.farmer_name}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCloseApproveModal}
+                                className="text-[#8A8072] hover:text-[#2B2620] text-xl font-bold"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {approvalError && (
+                            <div className="mb-4 border-l-2 border-[#A8452F] bg-[#A8452F]/[0.06] px-4 py-2">
+                                <p className="text-xs text-[#A8452F] font-medium">{approvalError}</p>
+                            </div>
+                        )}
+
+                        <div className="space-y-1 mb-5 text-xs text-[#5F574D] bg-[#F6F1E4]/60 p-3 rounded-xs border border-[#EEE8DC]">
+                            <p>
+                                <strong className="text-[#2B2620]">Animal:</strong> {approveModalPolicy.animal_name || "Tag"}{" "}
+                                ({approveModalPolicy.tag_number}) • {approveModalPolicy.species} ({approveModalPolicy.breed})
+                            </p>
+                            <p>
+                                <strong className="text-[#2B2620]">Provider:</strong> {approveModalPolicy.insurance_provider} • {approveModalPolicy.policy_name}
+                            </p>
+                            <p>
+                                <strong className="text-[#2B2620]">Coverage:</strong> ₹{Number(approveModalPolicy.coverage_amount).toLocaleString("en-IN")} | <strong className="text-[#2B2620]">Premium:</strong> ₹{Number(approveModalPolicy.premium_amount).toLocaleString("en-IN")}
+                            </p>
+                            {approveModalPolicy.identification_mark && (
+                                <p>
+                                    <strong className="text-[#2B2620]">ID Mark:</strong> {approveModalPolicy.identification_mark}
+                                </p>
+                            )}
+                        </div>
+
+                        <form onSubmit={handleConfirmApproval} className="space-y-4">
+                            <div>
+                                <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-1">
+                                    Policy Number *
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={approvalPolicyNumber}
+                                        onChange={(e) => setApprovalPolicyNumber(e.target.value)}
+                                        placeholder="e.g. NIC-LIV-2026-001"
+                                        className="av-input flex-1 text-sm text-[#2B2620] font-mono uppercase"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setApprovalPolicyNumber(`AGV-INS-${String(approveModalPolicy.policy_id).padStart(4, "0")}`)}
+                                        className="px-3 py-1 text-xs border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] rounded-xs"
+                                    >
+                                        Auto Generate
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-1">
+                                        Start Date *
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={approvalStartDate}
+                                        onChange={(e) => setApprovalStartDate(e.target.value)}
+                                        className="av-input w-full text-sm text-[#2B2620]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-1">
+                                        End Date *
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={approvalEndDate}
+                                        onChange={(e) => setApprovalEndDate(e.target.value)}
+                                        className="av-input w-full text-sm text-[#2B2620]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-1">
+                                    Admin Remarks (Optional)
+                                </label>
+                                <textarea
+                                    rows="2"
+                                    value={approvalRemarks}
+                                    onChange={(e) => setApprovalRemarks(e.target.value)}
+                                    placeholder="e.g. Ear tag & animal identity verified. Policy active."
+                                    className="av-input w-full text-sm text-[#2B2620]"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EEE8DC]">
+                                <button
+                                    type="button"
+                                    onClick={handleCloseApproveModal}
+                                    className="px-5 py-2 border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={approving}
+                                    className="px-6 py-2 bg-[#1F3B2C] text-[#F6F1E4] hover:bg-[#2C4A37] text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition disabled:opacity-50"
+                                >
+                                    {approving ? "Activating..." : "Approve & Activate"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================================
+                REJECT INSURANCE MODAL
+            ======================================================== */}
+            {rejectModalPolicy && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+                    <div className="bg-white border border-[#DED7C9] rounded-sm max-w-md w-full p-7 shadow-lg">
+                        <div className="flex items-center justify-between mb-4 border-b border-[#EEE8DC] pb-3">
+                            <h2 className="av-serif text-xl font-medium text-red-700">
+                                Reject Application
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={handleCloseRejectModal}
+                                className="text-[#8A8072] hover:text-[#2B2620] text-xl font-bold"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {rejectionError && (
+                            <div className="mb-4 border-l-2 border-[#A8452F] bg-[#A8452F]/[0.06] px-4 py-2">
+                                <p className="text-xs text-[#A8452F] font-medium">{rejectionError}</p>
+                            </div>
+                        )}
+
+                        <p className="text-xs text-[#5F574D] mb-4">
+                            You are rejecting the insurance application for{" "}
+                            <strong>{rejectModalPolicy.farmer_name}</strong>&#39;s animal (Tag #
+                            {rejectModalPolicy.tag_number}).
+                        </p>
+
+                        <form onSubmit={handleConfirmRejection} className="space-y-4">
+                            <div>
+                                <label className="block av-mono text-[10px] uppercase tracking-[0.15em] text-[#8A8072] mb-1">
+                                    Rejection Reason / Remarks
+                                </label>
+                                <textarea
+                                    rows="3"
+                                    value={rejectionRemarks}
+                                    onChange={(e) => setRejectionRemarks(e.target.value)}
+                                    placeholder="Provide the reason for rejection (e.g. ear tag photo unclear, age limit exceeded, invalid insurance provider)..."
+                                    className="av-input w-full text-sm text-[#2B2620]"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EEE8DC]">
+                                <button
+                                    type="button"
+                                    onClick={handleCloseRejectModal}
+                                    className="px-5 py-2 border border-[#8A8072] text-[#5F574D] hover:bg-[#F6F1E4] text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={rejecting}
+                                    className="px-6 py-2 bg-red-700 text-white hover:bg-red-800 text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition disabled:opacity-50"
+                                >
+                                    {rejecting ? "Rejecting..." : "Confirm Rejection"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================================
+                VIEW POLICY DETAILS MODAL
+            ======================================================== */}
+            {viewingInsurancePolicy && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+                    <div className="bg-white border border-[#DED7C9] rounded-sm max-w-xl w-full max-h-[90vh] overflow-y-auto p-7 shadow-lg">
+                        <div className="flex items-center justify-between mb-4 border-b border-[#EEE8DC] pb-3">
+                            <div>
+                                <h2 className="av-serif text-xl font-medium text-[#2B2620]">
+                                    Insurance Record Details
+                                </h2>
+                                <p className="text-xs text-[#8A8072] mt-0.5">
+                                    {viewingInsurancePolicy.policy_name}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setViewingInsurancePolicy(null)}
+                                className="text-[#8A8072] hover:text-[#2B2620] text-xl font-bold"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="space-y-3 text-xs text-[#5F574D] bg-[#F6F1E4]/60 p-4 rounded-xs border border-[#EEE8DC] mb-5">
+                            <div className="flex justify-between items-center pb-2 border-b border-[#DED7C9]">
+                                <span className="av-mono text-[10px] uppercase text-[#8A8072]">Status:</span>
+                                <span>{renderInsuranceBadge(viewingInsurancePolicy.status)}</span>
+                            </div>
+                            <div>
+                                <strong className="text-[#2B2620] block">Policy Number:</strong>
+                                <span className="av-mono font-semibold text-[#1F3B2C]">
+                                    {viewingInsurancePolicy.policy_number || "Pending assignment upon approval"}
+                                </span>
+                            </div>
+                            <div>
+                                <strong className="text-[#2B2620] block">Farmer / Applicant:</strong>
+                                <span className="font-semibold text-[#2B2620]">
+                                    {viewingInsurancePolicy.farmer_name}
+                                </span>{" "}
+                                ({viewingInsurancePolicy.farmer_email} | {viewingInsurancePolicy.farmer_phone || "No phone"})
+                            </div>
+                            <div>
+                                <strong className="text-[#2B2620] block">Insurance Provider:</strong>
+                                <span>{viewingInsurancePolicy.insurance_provider}</span>
+                            </div>
+                            <div>
+                                <strong className="text-[#2B2620] block">Insured Animal:</strong>
+                                <span>
+                                    {viewingInsurancePolicy.animal_name ? `${viewingInsurancePolicy.animal_name} (${viewingInsurancePolicy.tag_number})` : viewingInsurancePolicy.tag_number} — {viewingInsurancePolicy.species} ({viewingInsurancePolicy.breed}, {viewingInsurancePolicy.gender})
+                                </span>
+                            </div>
+                            {viewingInsurancePolicy.identification_mark && (
+                                <div>
+                                    <strong className="text-[#2B2620] block">Physical Identification Mark:</strong>
+                                    <span>{viewingInsurancePolicy.identification_mark}</span>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#DED7C9]">
+                                <div>
+                                    <strong className="text-[#2B2620] block">Coverage Amount:</strong>
+                                    <span className="text-[#1F3B2C] font-semibold text-sm">
+                                        ₹{Number(viewingInsurancePolicy.coverage_amount).toLocaleString("en-IN")}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong className="text-[#2B2620] block">Premium Amount:</strong>
+                                    <span className="text-[#2B2620] font-semibold text-sm">
+                                        ₹{Number(viewingInsurancePolicy.premium_amount).toLocaleString("en-IN")}
+                                    </span>
+                                </div>
+                            </div>
+                            {Number(viewingInsurancePolicy.subsidy_amount) > 0 && (
+                                <div>
+                                    <strong className="text-[#2B2620] block">Subsidy Covered:</strong>
+                                    <span className="text-[#D9A441] font-semibold">
+                                        ₹{Number(viewingInsurancePolicy.subsidy_amount).toLocaleString("en-IN")}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#DED7C9]">
+                                <div>
+                                    <strong className="text-[#2B2620] block">Effective Start Date:</strong>
+                                    <span>
+                                        {viewingInsurancePolicy.start_date
+                                            ? new Date(viewingInsurancePolicy.start_date).toLocaleDateString("en-IN", {
+                                                  day: "2-digit",
+                                                  month: "short",
+                                                  year: "numeric"
+                                              })
+                                            : "—"}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong className="text-[#2B2620] block">Effective End Date:</strong>
+                                    <span>
+                                        {viewingInsurancePolicy.end_date
+                                            ? new Date(viewingInsurancePolicy.end_date).toLocaleDateString("en-IN", {
+                                                  day: "2-digit",
+                                                  month: "short",
+                                                  year: "numeric"
+                                              })
+                                            : "—"}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#DED7C9]">
+                                <div>
+                                    <strong className="text-[#2B2620] block">Applied At:</strong>
+                                    <span>
+                                        {viewingInsurancePolicy.applied_at
+                                            ? new Date(viewingInsurancePolicy.applied_at).toLocaleString("en-IN")
+                                            : "—"}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong className="text-[#2B2620] block">Reviewed At:</strong>
+                                    <span>
+                                        {viewingInsurancePolicy.reviewed_at
+                                            ? new Date(viewingInsurancePolicy.reviewed_at).toLocaleString("en-IN")
+                                            : "Awaiting review"}
+                                    </span>
+                                </div>
+                            </div>
+                            {viewingInsurancePolicy.admin_remarks && (
+                                <div className="pt-2 border-t border-[#DED7C9]">
+                                    <strong className="text-[#2B2620] block">Administrator Remarks:</strong>
+                                    <span className={viewingInsurancePolicy.status === "REJECTED" ? "text-red-700" : "text-[#1F3B2C]"}>
+                                        {viewingInsurancePolicy.admin_remarks}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setViewingInsurancePolicy(null)}
+                                className="px-5 py-2 bg-[#1F3B2C] text-[#F6F1E4] hover:bg-[#2C4A37] text-xs uppercase tracking-[0.15em] font-medium rounded-xs transition"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

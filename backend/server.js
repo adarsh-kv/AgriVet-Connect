@@ -17,6 +17,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const farmRoutes = require("./routes/farmRoutes");
 const feedRoutes = require("./routes/feedRoutes");
 const schemeRoutes = require("./routes/schemeRoutes");
+const insuranceRoutes = require("./routes/insuranceRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -31,6 +32,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/farms", farmRoutes);
 app.use("/api/feed", feedRoutes);
 app.use("/api/schemes", schemeRoutes);
+app.use("/api/insurance", insuranceRoutes);
 
 app.get("/", (req, res) => {
     res.json({
