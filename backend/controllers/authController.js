@@ -272,8 +272,195 @@ const registerVeterinarian = async (req, res) => {
     }
 };
 
+// =========================================================
+// GET USER PROFILE
+// =========================================================
+const getProfile = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+
+        const [users] = await db.query(
+            `SELECT
+                u.user_id,
+                u.full_name,
+                u.email,
+                u.phone,
+                u.role_id,
+                u.status,
+                u.created_at,
+                r.role_name AS role
+             FROM users u
+             JOIN roles r ON u.role_id = r.role_id
+             WHERE u.user_id = ?`,
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = users[0];
+        let verification = null;
+        let farms = [];
+
+        if (user.role === "VETERINARIAN") {
+            const [verifications] = await db.query(
+                `SELECT
+                    verification_id,
+                    certificate_name,
+                    specialization,
+                    certificate_number,
+                    verification_status,
+                    submitted_at,
+                    verified_at
+                 FROM veterinarian_verifications
+                 WHERE user_id = ?
+                 ORDER BY verification_id DESC
+                 LIMIT 1`,
+                [userId]
+            );
+            if (verifications.length > 0) {
+                verification = verifications[0];
+            }
+        } else if (user.role === "FARMER") {
+            const [userFarms] = await db.query(
+                `SELECT
+                    farm_id,
+                    farm_name,
+                    location,
+                    farm_type,
+                    description,
+                    created_at
+                 FROM farms
+                 WHERE owner_id = ?
+                 ORDER BY farm_id DESC`,
+                [userId]
+            );
+            farms = userFarms;
+        }
+
+        res.status(200).json({
+            user,
+            verification,
+            farms
+        });
+    } catch (error) {
+        console.error("Get Profile Error:", error);
+        res.status(500).json({ message: "Server error retrieving profile" });
+    }
+};
+
+// =========================================================
+// UPDATE USER PROFILE
+// =========================================================
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const role = req.user.role;
+        const { full_name, phone, specialization } = req.body;
+
+        if (!full_name || !String(full_name).trim()) {
+            return res.status(400).json({ message: "Full name is required" });
+        }
+
+        const cleanName = String(full_name).trim();
+        const cleanPhone = phone !== undefined ? (phone ? String(phone).trim() : null) : null;
+
+        // Update basic user info (full_name, phone)
+        await db.query(
+            `UPDATE users
+             SET full_name = ?,
+                 phone = ?
+             WHERE user_id = ?`,
+            [cleanName, cleanPhone, userId]
+        );
+
+        // If veterinarian, allow updating specialization without touching verification status/history
+        if (role === "VETERINARIAN" && specialization !== undefined) {
+            const cleanSpec = specialization ? String(specialization).trim() : null;
+            await db.query(
+                `UPDATE veterinarian_verifications
+                 SET specialization = ?
+                 WHERE user_id = ?
+                 ORDER BY verification_id DESC
+                 LIMIT 1`,
+                [cleanSpec, userId]
+            );
+        }
+
+        // Fetch refreshed user info to return
+        const [users] = await db.query(
+            `SELECT
+                u.user_id,
+                u.full_name,
+                u.email,
+                u.phone,
+                u.role_id,
+                u.status,
+                u.created_at,
+                r.role_name AS role
+             FROM users u
+             JOIN roles r ON u.role_id = r.role_id
+             WHERE u.user_id = ?`,
+            [userId]
+        );
+
+        const updatedUser = users[0];
+        let verification = null;
+        let farms = [];
+
+        if (role === "VETERINARIAN") {
+            const [verifications] = await db.query(
+                `SELECT
+                    verification_id,
+                    certificate_name,
+                    specialization,
+                    certificate_number,
+                    verification_status,
+                    submitted_at,
+                    verified_at
+                 FROM veterinarian_verifications
+                 WHERE user_id = ?
+                 ORDER BY verification_id DESC
+                 LIMIT 1`,
+                [userId]
+            );
+            if (verifications.length > 0) {
+                verification = verifications[0];
+            }
+        } else if (role === "FARMER") {
+            const [userFarms] = await db.query(
+                `SELECT
+                    farm_id,
+                    farm_name,
+                    location,
+                    farm_type,
+                    description,
+                    created_at
+                 FROM farms
+                 WHERE owner_id = ?
+                 ORDER BY farm_id DESC`,
+                [userId]
+            );
+            farms = userFarms;
+        }
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: updatedUser,
+            verification,
+            farms
+        });
+    } catch (error) {
+        console.error("Update Profile Error:", error);
+        res.status(500).json({ message: "Server error updating profile" });
+    }
+};
+
 module.exports = {
     register,
     registerVeterinarian,
-    login
+    login,
+    getProfile,
+    updateProfile
 };

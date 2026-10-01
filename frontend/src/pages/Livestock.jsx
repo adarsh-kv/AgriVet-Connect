@@ -106,6 +106,11 @@ const EMPTY_FORM = {
 };
 
 const Livestock = () => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const userRole = user?.role;
+    const isFarmer = userRole === "FARMER";
+    const isVet = userRole === "VETERINARIAN";
+
     const [livestock, setLivestock] = useState([]);
     const [farms, setFarms] = useState([]);
 
@@ -262,14 +267,7 @@ const Livestock = () => {
 
         const fetchData = async () => {
             try {
-                setLoading(true);
-                setError("");
-
-                const [livestockResponse, farmsResponse] =
-                    await Promise.all([
-                        API.get("/livestock"),
-                        API.get("/farms")
-                    ]);
+                const livestockResponse = await API.get("/livestock");
 
                 if (cancelled) return;
 
@@ -277,9 +275,13 @@ const Livestock = () => {
                     livestockResponse.data
                 );
 
-                setFarms(
-                    farmsResponse.data
-                );
+                if (isFarmer) {
+                    const farmsResponse = await API.get("/farms");
+                    if (cancelled) return;
+                    setFarms(farmsResponse.data);
+                } else {
+                    setFarms([]);
+                }
             } catch (error) {
                 if (cancelled) return;
 
@@ -290,7 +292,7 @@ const Livestock = () => {
 
                 setError(
                     error.response?.data?.message ||
-                    "Failed to load livestock and farms"
+                    "Failed to load livestock"
                 );
             } finally {
                 if (!cancelled) {
@@ -304,7 +306,7 @@ const Livestock = () => {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [isFarmer]);
 
     if (loading) {
         return (
@@ -363,22 +365,24 @@ const Livestock = () => {
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        disabled={farms.length === 0}
-                        onClick={() => {
-                            setEditingId(null);
-                            setFormData(EMPTY_FORM);
-                            setFormError("");
-                            setShowForm(true);
-                        }}
-                        className="av-mono text-[10px] tracking-[0.15em] uppercase bg-[#1F3B2C] text-[#F6F1E4] px-5 py-3 rounded-sm hover:bg-[#2C4A37] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        + Add Livestock
-                    </button>
+                    {isFarmer && (
+                        <button
+                            type="button"
+                            disabled={farms.length === 0}
+                            onClick={() => {
+                                setEditingId(null);
+                                setFormData(EMPTY_FORM);
+                                setFormError("");
+                                setShowForm(true);
+                            }}
+                            className="av-mono text-[10px] tracking-[0.15em] uppercase bg-[#1F3B2C] text-[#F6F1E4] px-5 py-3 rounded-sm hover:bg-[#2C4A37] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            + Add Livestock
+                        </button>
+                    )}
                 </div>
 
-                {farms.length === 0 && (
+                {isFarmer && farms.length === 0 && (
                     <div className="mb-8 border-l-2 border-[#D9A441] bg-[#D9A441]/[0.08] px-5 py-4">
                         <p className="av-mono text-[10px] tracking-[0.15em] uppercase text-[#8A651C] mb-1">
                             Farm required
@@ -651,9 +655,11 @@ const Livestock = () => {
                                             Weight
                                         </th>
 
-                                        <th className="text-right px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
-                                            Actions
-                                        </th>
+                                        {!isVet && (
+                                            <th className="text-right px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
+                                                Actions
+                                            </th>
+                                        )}
                                     </tr>
                                 </thead>
 
@@ -717,51 +723,53 @@ const Livestock = () => {
                                                         : "—"}
                                                 </td>
 
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center justify-end gap-4">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                handleEdit(
-                                                                    animal
-                                                                )
-                                                            }
-                                                            className="inline-flex items-center gap-1.5 av-mono text-[10px] uppercase tracking-wider text-[#6B6255] hover:text-[#1F3B2C] transition-colors"
-                                                        >
-                                                            <svg
-                                                                width="13"
-                                                                height="13"
-                                                                viewBox="0 0 24 24"
-                                                                aria-hidden="true"
+                                                {!isVet && (
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center justify-end gap-4">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleEdit(
+                                                                        animal
+                                                                    )
+                                                                }
+                                                                className="inline-flex items-center gap-1.5 av-mono text-[10px] uppercase tracking-wider text-[#6B6255] hover:text-[#1F3B2C] transition-colors"
                                                             >
-                                                                <EditIcon />
-                                                            </svg>
+                                                                <svg
+                                                                    width="13"
+                                                                    height="13"
+                                                                    viewBox="0 0 24 24"
+                                                                    aria-hidden="true"
+                                                                >
+                                                                    <EditIcon />
+                                                                </svg>
 
-                                                            Edit
-                                                        </button>
+                                                                Edit
+                                                            </button>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    animal.livestock_id
-                                                                )
-                                                            }
-                                                            className="inline-flex items-center gap-1.5 av-mono text-[10px] uppercase tracking-wider text-[#6B6255] hover:text-[#A8452F] transition-colors"
-                                                        >
-                                                            <svg
-                                                                width="13"
-                                                                height="13"
-                                                                viewBox="0 0 24 24"
-                                                                aria-hidden="true"
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        animal.livestock_id
+                                                                    )
+                                                                }
+                                                                className="inline-flex items-center gap-1.5 av-mono text-[10px] uppercase tracking-wider text-[#6B6255] hover:text-[#A8452F] transition-colors"
                                                             >
-                                                                <DeleteIcon />
-                                                            </svg>
+                                                                <svg
+                                                                    width="13"
+                                                                    height="13"
+                                                                    viewBox="0 0 24 24"
+                                                                    aria-hidden="true"
+                                                                >
+                                                                    <DeleteIcon />
+                                                                </svg>
 
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </td>
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                )}
                                             </tr>
                                         );
                                     })}

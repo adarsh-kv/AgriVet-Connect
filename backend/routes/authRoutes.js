@@ -3,10 +3,13 @@ const express = require("express");
 const {
     register,
     registerVeterinarian,
-    login
+    login,
+    getProfile,
+    updateProfile
 } = require("../controllers/authController");
 
 const uploadCertificate = require("../middleware/uploadMiddleware");
+const authenticateToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -28,5 +31,9 @@ router.post(
 );
 
 router.post("/login", login);
+
+// Profile endpoints
+router.get("/profile", authenticateToken, getProfile);
+router.put("/profile", authenticateToken, updateProfile);
 
 module.exports = router;

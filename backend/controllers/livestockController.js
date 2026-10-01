@@ -104,8 +104,8 @@ const getAllLivestock = async (req, res) => {
 
         let rows;
 
-        // Admin can view all livestock
-        if (req.user.role === "ADMIN") {
+        // Admin and Veterinarian can view livestock for clinical / management review
+        if (req.user.role === "ADMIN" || req.user.role === "VETERINARIAN") {
 
             [rows] = await db.query(
                 `SELECT * FROM livestock`
@@ -142,7 +142,7 @@ const getLivestockById = async (req, res) => {
 
         let rows;
 
-        if (req.user.role === "ADMIN") {
+        if (req.user.role === "ADMIN" || req.user.role === "VETERINARIAN") {
 
             [rows] = await db.query(
                 "SELECT * FROM livestock WHERE livestock_id = ?",

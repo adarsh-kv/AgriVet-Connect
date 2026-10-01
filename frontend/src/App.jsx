@@ -18,6 +18,7 @@ import Farms from "./pages/Farm";
 import Feed from "./pages/Feed";
 import Schemes from "./pages/Schemes";
 import AdminSchemes from "./pages/AdminSchemes";
+import Profile from "./pages/Profile";
 
 const App = () => {
     return (
@@ -203,6 +204,23 @@ const App = () => {
                         <ProtectedRoute allowedRoles={["ADMIN"]}>
                             <Layout>
                                 <AdminSchemes />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={[
+                                "FARMER",
+                                "VETERINARIAN",
+                                "ADMIN"
+                            ]}
+                        >
+                            <Layout>
+                                <Profile />
                             </Layout>
                         </ProtectedRoute>
                     }

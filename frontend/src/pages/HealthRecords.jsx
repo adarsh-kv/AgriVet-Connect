@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 
 const HealthRecords = () => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const isFarmer = user?.role === "FARMER";
+
     const [records, setRecords] = useState([]);
     const EMPTY_FORM = {
         livestock_id: "",
@@ -169,13 +172,20 @@ const HealthRecords = () => {
                         recorded
                     </p>
 
-                    <button
-                        type="button"
-                        onClick={() => setShowForm(true)}
-                        className="bg-[#1F3B2C] text-[#F6F1E4] px-5 py-3 rounded-sm av-mono text-[10px] tracking-[0.15em] uppercase hover:bg-[#2C4A37] transition-colors"
-                    >
-                        + Add Health Record
-                    </button>
+                    {!isFarmer && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setEditingId(null);
+                                setFormData(EMPTY_FORM);
+                                setFormError("");
+                                setShowForm(true);
+                            }}
+                            className="bg-[#1F3B2C] text-[#F6F1E4] px-5 py-3 rounded-sm av-mono text-[10px] tracking-[0.15em] uppercase hover:bg-[#2C4A37] transition-colors"
+                        >
+                            + Add Health Record
+                        </button>
+                    )}
 
                 </div>
 
@@ -344,7 +354,9 @@ const HealthRecords = () => {
                     <div className="bg-white border border-[#DED7C9] rounded-sm p-8">
 
                         <p className="text-[#6B6255]">
-                            No health records found.
+                            {isFarmer
+                                ? "No health records found for your livestock. Health and treatment logs are recorded by consulting veterinarians during medical examinations."
+                                : "No health records recorded yet. Click '+ Add Health Record' to log a clinical examination or treatment."}
                         </p>
 
                     </div>
@@ -385,9 +397,11 @@ const HealthRecords = () => {
                                             Remarks
                                         </th>
 
-                                        <th className="text-left px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
-                                            Actions
-                                        </th>
+                                        {!isFarmer && (
+                                            <th className="text-left px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
+                                                Actions
+                                            </th>
+                                        )}
 
                                     </tr>
 
@@ -438,27 +452,29 @@ const HealthRecords = () => {
                                                 {record.remarks || "—"}
                                             </td>
 
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-4">
+                                            {!isFarmer && (
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-4">
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEdit(record)}
-                                                        className="text-[#1F3B2C] av-mono text-[10px] uppercase tracking-wider hover:text-[#D9A441] transition-colors"
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEdit(record)}
+                                                            className="text-[#1F3B2C] av-mono text-[10px] uppercase tracking-wider hover:text-[#D9A441] transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDelete(record.record_id)}
-                                                        className="text-[#A8452F] av-mono text-[10px] uppercase tracking-wider hover:opacity-70 transition-opacity"
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDelete(record.record_id)}
+                                                            className="text-[#A8452F] av-mono text-[10px] uppercase tracking-wider hover:opacity-70 transition-opacity"
+                                                        >
+                                                            Delete
+                                                        </button>
 
-                                                </div>
-                                            </td>
+                                                    </div>
+                                                </td>
+                                            )}
 
                                         </tr>
 

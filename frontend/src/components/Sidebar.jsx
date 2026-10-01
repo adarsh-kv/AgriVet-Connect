@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 const BrandMark = ({ stroke = "#D9A441", size = 28 }) => (
@@ -187,6 +188,17 @@ const LogoutIcon = () => (
     />
 );
 
+const ProfileIcon = () => (
+    <path
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+    />
+);
+
 
 // ==========================================
 // SIDEBAR
@@ -196,9 +208,21 @@ const Sidebar = () => {
 
     const navigate = useNavigate();
 
-    const user = JSON.parse(
-        localStorage.getItem("user") || "null"
+    const [user, setUser] = useState(() =>
+        JSON.parse(localStorage.getItem("user") || "null")
     );
+
+    useEffect(() => {
+        const handleUpdate = () => {
+            setUser(JSON.parse(localStorage.getItem("user") || "null"));
+        };
+        window.addEventListener("userUpdated", handleUpdate);
+        window.addEventListener("storage", handleUpdate);
+        return () => {
+            window.removeEventListener("userUpdated", handleUpdate);
+            window.removeEventListener("storage", handleUpdate);
+        };
+    }, []);
 
     const role = user?.role;
 
@@ -247,6 +271,11 @@ const Sidebar = () => {
             name: "Schemes & Insurance",
             path: "/schemes",
             icon: <SchemeIcon />
+        },
+        {
+            name: "My Profile",
+            path: "/profile",
+            icon: <ProfileIcon />
         }
     ];
 
@@ -262,6 +291,11 @@ const Sidebar = () => {
             icon: <DashboardIcon />
         },
         {
+            name: "Livestock Directory",
+            path: "/livestock",
+            icon: <LivestockIcon />
+        },
+        {
             name: "Health Records",
             path: "/health-records",
             icon: <HealthIcon />
@@ -275,6 +309,11 @@ const Sidebar = () => {
             name: "Requests",
             path: "/veterinarian/requests",
             icon: <VeterinarianIcon />
+        },
+        {
+            name: "My Profile",
+            path: "/profile",
+            icon: <ProfileIcon />
         }
     ];
 
@@ -298,6 +337,11 @@ const Sidebar = () => {
             name: "Schemes & Insurance",
             path: "/admin/schemes",
             icon: <SchemeIcon />
+        },
+        {
+            name: "My Profile",
+            path: "/profile",
+            icon: <ProfileIcon />
         }
     ];
 
@@ -381,17 +425,28 @@ const Sidebar = () => {
 
             <div className="px-6 py-4 border-b border-[#3F5C46]">
 
-                <p className="av-mono text-[9px] tracking-[0.2em] uppercase text-[#7FA085]">
-                    Signed in as
-                </p>
+                <NavLink
+                    to="/profile"
+                    className="block group"
+                    title="View & Edit Profile"
+                >
 
-                <p className="text-sm text-[#F6F1E4] mt-1">
-                    {user?.full_name || "User"}
-                </p>
+                    <p className="av-mono text-[9px] tracking-[0.2em] uppercase text-[#7FA085]">
+                        Signed in as
+                    </p>
 
-                <p className="text-[10px] text-[#D9A441] mt-1">
-                    {role || "UNKNOWN"}
-                </p>
+                    <p className="text-sm text-[#F6F1E4] mt-1 font-medium group-hover:text-[#D9A441] transition-colors">
+                        {user?.full_name || "User"}
+                    </p>
+
+                    <p className="text-[10px] text-[#D9A441] mt-1 flex items-center justify-between">
+                        <span>{role || "UNKNOWN"}</span>
+                        <span className="text-[9px] text-[#7FA085] group-hover:text-[#D9A441] transition-colors">
+                            Profile →
+                        </span>
+                    </p>
+
+                </NavLink>
 
             </div>
 

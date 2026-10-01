@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
-const user = JSON.parse(localStorage.getItem("user"));
-const userRole = user?.role;
 const Vaccinations = () => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const userRole = user?.role;
+    const isFarmer = userRole === "FARMER";
+
     const [vaccinations, setVaccinations] = useState([]);
         const EMPTY_FORM = {
         livestock_id: "",
@@ -350,7 +352,9 @@ const Vaccinations = () => {
                     <div className="bg-white border border-[#DED7C9] rounded-sm p-8">
 
                         <p className="text-[#6B6255]">
-                            No vaccination records found.
+                            {isFarmer
+                                ? "No vaccination records found for your livestock. Scheduled and completed immunizations are logged by your veterinarian."
+                                : "No vaccination records found. Click '+ Add Vaccination' to record an immunization."}
                         </p>
 
                     </div>
@@ -383,9 +387,11 @@ const Vaccinations = () => {
                                             Status
                                         </th>
 
-                                        <th className="text-left px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
-                                            Actions
-                                        </th>
+                                        {!isFarmer && (
+                                            <th className="text-left px-6 py-4 av-mono text-[10px] tracking-[0.15em] uppercase font-medium text-[#D8E2D9]">
+                                                Actions
+                                            </th>
+                                        )}
 
                                     </tr>
 
@@ -438,8 +444,8 @@ const Vaccinations = () => {
 
                                             </td>
 
-                                            <td className="px-6 py-4">
-                                                {userRole !== "FARMER" && (
+                                            {!isFarmer && (
+                                                <td className="px-6 py-4">
                                                     <div className="flex items-center gap-4">
 
                                                         <button
@@ -461,8 +467,8 @@ const Vaccinations = () => {
                                                         </button>
 
                                                     </div>
-                                                )}
-                                            </td>
+                                                </td>
+                                            )}
 
                                         </tr>
 
@@ -483,6 +489,5 @@ const Vaccinations = () => {
         </div>
     );
 };
-console.log("CURRENT USER:", JSON.parse(localStorage.getItem("user")));
 
 export default Vaccinations;
