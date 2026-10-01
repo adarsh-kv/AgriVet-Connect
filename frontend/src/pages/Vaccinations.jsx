@@ -7,7 +7,8 @@ const Vaccinations = () => {
     const isFarmer = userRole === "FARMER";
 
     const [vaccinations, setVaccinations] = useState([]);
-        const EMPTY_FORM = {
+    const [livestockList, setLivestockList] = useState([]);
+    const EMPTY_FORM = {
         livestock_id: "",
         vaccine_name: "",
         vaccination_date: "",
@@ -109,22 +110,42 @@ const Vaccinations = () => {
     };
 
     useEffect(() => {
-        const fetchVaccinations = async () => {
+        let isMounted = true;
+
+        const fetchData = async () => {
             try {
-                const response = await API.get("/vaccinations");
-                setVaccinations(response.data);
+                const vaccPromise = API.get("/vaccinations");
+                const livestockPromise = !isFarmer ? API.get("/livestock") : Promise.resolve({ data: [] });
+
+                const [vaccResponse, livestockResponse] = await Promise.all([
+                    vaccPromise,
+                    livestockPromise
+                ]);
+
+                if (isMounted) {
+                    setVaccinations(vaccResponse.data);
+                    setLivestockList(Array.isArray(livestockResponse.data) ? livestockResponse.data : []);
+                }
             } catch (error) {
-                setError(
-                    error.response?.data?.message ||
-                    "Failed to load vaccinations"
-                );
+                if (isMounted) {
+                    setError(
+                        error.response?.data?.message ||
+                        "Failed to load vaccinations"
+                    );
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
 
-        fetchVaccinations();
-    }, []);
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isFarmer]);
 
     if (loading) {
         return (
@@ -216,21 +237,33 @@ const Vaccinations = () => {
                             className="grid grid-cols-1 md:grid-cols-2 gap-5"
                         >
 
-                            {/* Livestock ID */}
+                            {/* Livestock Selection Dropdown */}
                             <div>
                                 <label className="block av-mono text-[10px] uppercase tracking-wider text-[#8A8072] mb-2">
-                                    Livestock ID
+                                    Select Livestock *
                                 </label>
 
-                                <input
-                                    type="number"
+                                <select
                                     name="livestock_id"
                                     value={formData.livestock_id}
                                     onChange={handleChange}
-                                    placeholder="2"
                                     required
-                                    className="w-full border border-[#DED7C9] px-4 py-3 rounded-sm outline-none focus:border-[#1F3B2C]"
-                                />
+                                    className="w-full border border-[#DED7C9] px-4 py-3 rounded-sm outline-none focus:border-[#1F3B2C] bg-white text-[#2B2620]"
+                                >
+                                    <option value="">
+                                        -- Select Animal --
+                                    </option>
+                                    {livestockList.map((animal) => (
+                                        <option
+                                            key={animal.livestock_id}
+                                            value={animal.livestock_id}
+                                        >
+                                            {animal.animal_name
+                                                ? `${animal.animal_name} (Tag: ${animal.tag_number})`
+                                                : `Tag: ${animal.tag_number}`} — {animal.species} ({animal.breed || "General"}){animal.farm_name ? ` • ${animal.farm_name}` : ""}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             {/* Vaccine Name */}

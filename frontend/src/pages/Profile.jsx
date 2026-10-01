@@ -641,33 +641,27 @@ const Profile = () => {
                                     </div>
                                 )}
 
-                                {/* ACCOUNT METADATA & SECURITY CARD */}
+                                {/* ACCOUNT SUMMARY CARD */}
                                 <div className="bg-white border border-[#EFE9DC] rounded-xl p-6 shadow-xs text-xs space-y-3">
                                     <h3 className="text-sm font-semibold text-[#1C1917] border-b border-[#EFE9DC] pb-2">
-                                        Account Security & System Info
+                                        Account Summary
                                     </h3>
-                                    <div className="flex justify-between py-1 border-b border-[#FAF8F5]">
-                                        <span className="text-gray-400">Account ID:</span>
-                                        <span className="av-mono font-medium text-gray-700">
-                                            #{profile.user?.user_id}
+                                    <div className="flex justify-between items-center py-1.5 border-b border-[#FAF8F5]">
+                                        <span className="text-gray-500 font-medium">Role:</span>
+                                        <span className={`px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider border ${getRoleBadge(role)}`}>
+                                            {role || "USER"}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between py-1 border-b border-[#FAF8F5]">
-                                        <span className="text-gray-400">Role ID:</span>
-                                        <span className="av-mono font-medium text-gray-700">
-                                            {profile.user?.role_id} ({role})
+                                    <div className="flex justify-between items-center py-1.5 border-b border-[#FAF8F5]">
+                                        <span className="text-gray-500 font-medium">Status:</span>
+                                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            {profile.user?.status || "ACTIVE"}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between py-1 border-b border-[#FAF8F5]">
-                                        <span className="text-gray-400">Security Layer:</span>
-                                        <span className="font-medium text-emerald-700">
-                                            JWT Bearer Auth
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between py-1">
-                                        <span className="text-gray-400">Status:</span>
-                                        <span className="font-semibold text-emerald-800">
-                                            {profile.user?.status}
+                                    <div className="flex justify-between items-center py-1.5">
+                                        <span className="text-gray-500 font-medium">Member Since:</span>
+                                        <span className="font-medium text-gray-800">
+                                            {formatDate(profile.user?.created_at)}
                                         </span>
                                     </div>
                                 </div>

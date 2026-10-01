@@ -108,15 +108,29 @@ const getAllLivestock = async (req, res) => {
         if (req.user.role === "ADMIN" || req.user.role === "VETERINARIAN") {
 
             [rows] = await db.query(
-                `SELECT * FROM livestock`
+                `SELECT 
+                    l.*,
+                    f.farm_name,
+                    f.farm_type,
+                    f.location AS farm_location
+                 FROM livestock l
+                 LEFT JOIN farms f ON l.farm_id = f.farm_id
+                 ORDER BY l.livestock_id DESC`
             );
 
         } else {
 
             // Farmer can view only their livestock
             [rows] = await db.query(
-                `SELECT * FROM livestock
-                 WHERE owner_id = ?`,
+                `SELECT 
+                    l.*,
+                    f.farm_name,
+                    f.farm_type,
+                    f.location AS farm_location
+                 FROM livestock l
+                 LEFT JOIN farms f ON l.farm_id = f.farm_id
+                 WHERE l.owner_id = ?
+                 ORDER BY l.livestock_id DESC`,
                 [req.user.user_id]
             );
 
@@ -145,15 +159,28 @@ const getLivestockById = async (req, res) => {
         if (req.user.role === "ADMIN" || req.user.role === "VETERINARIAN") {
 
             [rows] = await db.query(
-                "SELECT * FROM livestock WHERE livestock_id = ?",
+                `SELECT 
+                    l.*,
+                    f.farm_name,
+                    f.farm_type,
+                    f.location AS farm_location
+                 FROM livestock l
+                 LEFT JOIN farms f ON l.farm_id = f.farm_id
+                 WHERE l.livestock_id = ?`,
                 [id]
             );
 
         } else {
 
             [rows] = await db.query(
-                `SELECT * FROM livestock
-                 WHERE livestock_id = ? AND owner_id = ?`,
+                `SELECT 
+                    l.*,
+                    f.farm_name,
+                    f.farm_type,
+                    f.location AS farm_location
+                 FROM livestock l
+                 LEFT JOIN farms f ON l.farm_id = f.farm_id
+                 WHERE l.livestock_id = ? AND l.owner_id = ?`,
                 [id, req.user.user_id]
             );
 

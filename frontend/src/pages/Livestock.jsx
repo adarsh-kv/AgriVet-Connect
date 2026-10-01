@@ -678,14 +678,14 @@ const Livestock = () => {
                                             >
                                                 <td className="px-6 py-4">
                                                     <div className="font-medium text-[#2B2620]">
-                                                        {farm?.farm_name ||
-                                                            animal.farm_name ||
+                                                        {animal.farm_name ||
+                                                            farm?.farm_name ||
                                                             "—"}
                                                     </div>
 
-                                                    {farm?.farm_type && (
+                                                    {(animal.farm_type || farm?.farm_type) && (
                                                         <div className="text-[10px] av-mono uppercase tracking-wider text-[#8A8072] mt-1">
-                                                            {farm.farm_type}
+                                                            {animal.farm_type || farm?.farm_type}
                                                         </div>
                                                     )}
                                                 </td>
