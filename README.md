@@ -1,123 +1,66 @@
-# Smart Livestock Health and Farm Management System
+# AgriVet Connect 🐄🌱
 
-A web-based application for managing livestock healthcare and farm operations through a centralized platform for Farmers, Veterinarians, and Administrators.
+## Smart Livestock Health and Farm Management System
 
----
+AgriVet Connect is a web-based livestock management platform designed to help farmers manage their farms, livestock health, vaccination records, feed information, and connect with veterinary services through a centralized digital system.
 
-## Project Description
-
-The Smart Livestock Health and Farm Management System is developed to simplify livestock healthcare and farm management by replacing manual record keeping with a centralized digital platform.
-
-The system enables farmers to manage livestock information, health records, vaccinations, feed, breeding, production, and farm activities while allowing veterinarians to manage appointments, treatments, and vaccination records. Administrators monitor the overall system and manage users and farm information.
+The platform provides role-based access for **Farmers, Veterinarians, and Administrators**, ensuring secure and efficient livestock management.
 
 ---
 
-## Objectives
+## Features
 
-- Develop a centralized web-based system for livestock and farm management.
-- Maintain digital health records of livestock.
-- Enable veterinarian appointment booking.
-- Schedule and track vaccinations.
-- Improve farm management through reminders and reports.
-- Reduce manual paperwork and improve data accuracy.
+### 👨‍🌾 Farmer Module
 
----
-
-## User Roles
-
-### Administrator
-
-- Manage users
-- Manage farmers
-- Manage veterinarians
-- Manage livestock information
-- Monitor system activities
-- Generate reports
-
-### Farmer
-
-- Register farm
-- Register livestock
-- Manage animal records
-- Manage feed
-- Manage breeding
-- Manage production
-- Book veterinarian appointments
-- View vaccination schedules
-- Receive reminders
-
-### Veterinarian
-
-- Manage availability
-- Accept appointment requests
-- Update treatment records
-- Update vaccination details
-- Maintain medical history
-- View assigned appointments
+* User registration and secure login
+* Farm management
+* Livestock registration and management
+* View livestock health history
+* View vaccination records
+* Feed information management
+* Notification updates
+* Government livestock scheme information
+* Livestock insurance information
+* Personal profile management
 
 ---
 
-## Main Features
+### 🩺 Veterinarian Module
 
-### Authentication
+* Secure veterinarian login
+* View livestock directory
+* Access livestock information for medical reference
+* Create and manage health records
+* Create and manage vaccination records
+* View veterinarian profile and verification details
 
-- Login
-- Registration
-- Role-Based Access
-- JWT Authentication
+---
 
-### Farm Management
+### 👨‍💼 Admin Module
 
-- Farm Registration
-- Farm Information
-- Daily Farm Activities
+* User management
+* Veterinarian verification
+* System monitoring
+* Government scheme directory management
+* Insurance information management
+* Administrative profile management
 
-### Livestock Management
+---
 
-- Animal Registration
-- Animal Information
-- Breed Details
-- Production Records
+## Main Modules
 
-### Health Management
+The system consists of the following modules:
 
-- Medical Records
-- Treatment Records
-- Disease History
-
-### Vaccination Management
-
-- Vaccination Scheduling
-- Vaccination History
-- Vaccination Reminders
-
-### Veterinarian Management
-
-- Veterinarian Directory
-- Appointment Booking
-- Availability Management
-
-### Feed Management
-
-- Feed Records
-- Feed Schedule
-
-### Breeding Management
-
-- Breeding Records
-- Pregnancy Tracking
-
-### Reports
-
-- Livestock Reports
-- Vaccination Reports
-- Farm Activity Reports
-
-### Notifications
-
-- Vaccination Reminder
-- Appointment Reminder
-- System Notifications
+1. User Management
+2. Farm Management
+3. Livestock Management
+4. Health Management
+5. Vaccination Management
+6. Veterinarian Management
+7. Feed Management
+8. Notifications
+9. Government Schemes Directory
+10. Livestock Insurance Directory
 
 ---
 
@@ -125,84 +68,237 @@ The system enables farmers to manage livestock information, health records, vacc
 
 ### Frontend
 
-- React.js
-- Tailwind CSS
+* React.js
+* Tailwind CSS
+* JavaScript
+* Axios
+* Vite
 
 ### Backend
 
-- Node.js
-- Express.js
-- REST API
+* Node.js
+* Express.js
+* REST API
 
 ### Database
 
-- MySQL
+* MySQL
 
-### Authentication
+### Security
 
-- JWT
+* JWT Authentication
+* Role-Based Authorization
+* Protected API Routes
 
-### Tools
+### Development Tools
 
-- Git
-- GitHub
-- VS Code
-- Postman
+* VS Code
+* Git
+* GitHub
+* Postman
 
 ---
 
-## Project Structure
+## System Architecture
 
 ```
-smart-livestock-health-and-farm-management-system/
-
-├── backend/
-├── frontend/
-├── database/
-├── docs/
-├── design/
-├── resources/
-├── README.md
-├── LICENSE
-├── CHANGELOG.md
-└── .gitignore
+User
+ |
+ | HTTPS Requests
+ |
+React Frontend
+ |
+ | REST API
+ |
+Express.js Backend
+ |
+ |
+MySQL Database
 ```
 
 ---
 
-## Development Plan
+## Role-Based Access Control
 
-- Requirement Analysis
-- System Design
-- Database Design
-- UI/UX Design
-- Backend Development
-- Frontend Development
-- Integration
-- Testing
-- Documentation
-- Deployment
+### Farmer
 
----
+Can:
 
-## Expected Outcome
+* Manage farms
+* Manage livestock
+* View health and vaccination information
+* Access scheme and insurance information
 
-The system will provide a secure and efficient platform for managing livestock and farm operations. It will improve communication between farmers and veterinarians, reduce missed vaccinations, maintain accurate records, and support better farm management through digital reports and reminders.
+Cannot:
+
+* Create veterinary health records
+* Manage vaccination records
 
 ---
 
-## Future Scope
+### Veterinarian
 
-- GPS-based farm location
-- Live weather integration
-- Mobile application
-- AI-based disease prediction
-- IoT-based livestock monitoring
+Can:
+
+* View livestock records
+* Create health records
+* Manage vaccination records
+
+Cannot:
+
+* Manage farms
+* Perform farmer operations
 
 ---
 
-## Developer
+### Admin
 
-**Adarsh Krishna V**
+Can:
 
-MCA Mini Project
+* Manage users
+* Verify veterinarians
+* Monitor system data
+
+---
+
+## Government Schemes & Insurance Directory
+
+AgriVet Connect provides informational access to:
+
+* Government livestock schemes
+* Livestock insurance providers
+* Eligibility information
+* Coverage details
+* Official portal links
+
+The platform provides guidance information and redirects users to official authorities for applications and services.
+
+---
+
+## Database Design
+
+Main entities include:
+
+* Users
+* Roles
+* Farms
+* Livestock
+* Health Records
+* Vaccinations
+* Veterinarian Verification
+* Feed Records
+* Notifications
+
+Relationships are maintained using relational database design and foreign key constraints.
+
+---
+
+## Installation Guide
+
+### Clone Repository
+
+```bash
+git clone <repository-url>
+cd AgriVet-Connect
+```
+
+---
+
+## Backend Setup
+
+Navigate to backend:
+
+```bash
+cd backend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.env` file:
+
+```
+PORT=5000
+DB_HOST=localhost
+DB_USER=<your_mysql_username>
+DB_PASSWORD=<your_mysql_password>
+DB_NAME=smart_livestock_db
+JWT_SECRET=<your_secret_key>
+```
+
+Start backend:
+
+```bash
+npm start
+```
+
+---
+
+## Frontend Setup
+
+Navigate to frontend:
+
+```bash
+cd frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run application:
+
+```bash
+npm run dev
+```
+
+---
+
+## Testing
+
+Completed testing includes:
+
+* Authentication testing
+* Role authorization testing
+* Livestock management testing
+* Health record testing
+* Vaccination testing
+* Government scheme directory testing
+* Insurance directory testing
+* Profile module testing
+* UI role restriction testing
+
+Quality checks:
+
+* Frontend ESLint: Passed
+* Production Build: Passed
+* Backend API verification: Passed
+
+---
+
+## Future Enhancements
+
+Possible future improvements:
+
+* Mobile application support
+* AI-based livestock disease prediction
+* IoT-based animal health monitoring
+* Advanced analytics dashboard
+* Digital veterinary consultation
+
+---
+
+## Project Information
+
+**Project Name:** AgriVet Connect
+
+**Project Type:** MCA Final Year Project
+
+**Purpose:** Digital livestock health and farm management platform
+
+**Developed Using:** React.js, Node.js, Express.js, MySQL
