@@ -377,11 +377,33 @@ const deletePolicy = async (req, res) => {
     }
 };
 
+// Get Insurance Directory / Schemes (All Authenticated Users)
+const getInsuranceDirectory = async (req, res) => {
+    try {
+        let rows;
+        if (req.user && req.user.role === "ADMIN") {
+            [rows] = await db.query(
+                "SELECT * FROM insurance_schemes ORDER BY insurance_id ASC"
+            );
+        } else {
+            [rows] = await db.query(
+                "SELECT * FROM insurance_schemes WHERE status = 'ACTIVE' ORDER BY insurance_id ASC"
+            );
+        }
+
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error("Get Insurance Directory Error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
 module.exports = {
     applyInsurance,
     getFarmerPolicies,
     getPolicyById,
     getAllPolicies,
     updatePolicyStatus,
-    deletePolicy
+    deletePolicy,
+    getInsuranceDirectory
 };

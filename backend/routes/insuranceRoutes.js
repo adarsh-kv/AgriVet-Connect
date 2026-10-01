@@ -6,7 +6,8 @@ const {
     getPolicyById,
     getAllPolicies,
     updatePolicyStatus,
-    deletePolicy
+    deletePolicy,
+    getInsuranceDirectory
 } = require("../controllers/insuranceController");
 
 const authenticateToken = require("../middleware/authMiddleware");
@@ -15,6 +16,7 @@ const authorizeRoles = require("../middleware/roleMiddleware");
 const router = express.Router();
 
 // Specific routes before /:id
+router.get("/directory", authenticateToken, getInsuranceDirectory);
 router.get("/", authenticateToken, authorizeRoles("ADMIN"), getAllPolicies);
 router.get("/my-policies", authenticateToken, authorizeRoles("FARMER"), getFarmerPolicies);
 router.post("/apply", authenticateToken, authorizeRoles("FARMER"), applyInsurance);

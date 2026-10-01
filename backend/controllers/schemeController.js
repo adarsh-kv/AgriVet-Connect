@@ -73,6 +73,7 @@ const createScheme = async (req, res) => {
             eligibility,
             benefits,
             department,
+            official_url,
             application_deadline,
             status
         } = req.body;
@@ -107,8 +108,8 @@ const createScheme = async (req, res) => {
 
         const [result] = await db.query(
             `INSERT INTO schemes
-             (scheme_name, scheme_code, category, description, eligibility, benefits, department, application_deadline, status, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (scheme_name, scheme_code, category, description, eligibility, benefits, department, official_url, application_deadline, status, created_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 String(scheme_name).trim(),
                 String(scheme_code).trim().toUpperCase(),
@@ -117,6 +118,7 @@ const createScheme = async (req, res) => {
                 String(eligibility).trim(),
                 String(benefits).trim(),
                 String(department).trim(),
+                official_url ? String(official_url).trim() : null,
                 application_deadline || null,
                 cleanStatus,
                 req.user.user_id
@@ -145,6 +147,7 @@ const updateScheme = async (req, res) => {
             eligibility,
             benefits,
             department,
+            official_url,
             application_deadline,
             status
         } = req.body;
@@ -186,6 +189,7 @@ const updateScheme = async (req, res) => {
                  eligibility = ?,
                  benefits = ?,
                  department = ?,
+                 official_url = ?,
                  application_deadline = ?,
                  status = ?
              WHERE scheme_id = ?`,
@@ -197,6 +201,7 @@ const updateScheme = async (req, res) => {
                 String(eligibility).trim(),
                 String(benefits).trim(),
                 String(department).trim(),
+                official_url !== undefined ? (official_url ? String(official_url).trim() : null) : null,
                 application_deadline || null,
                 cleanStatus,
                 id
